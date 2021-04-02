@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-
 import torch
-
 import cupy
 import re
 
