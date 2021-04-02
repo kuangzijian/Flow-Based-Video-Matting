@@ -364,4 +364,4 @@ if __name__ == '__main__':
     hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
     rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
-    cv2.imwrite('flow.png', rgb)
+    cv2.imwrite('results/flow.png', rgb)
