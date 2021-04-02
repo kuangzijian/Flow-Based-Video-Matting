@@ -13,12 +13,9 @@ try:
 except:
     sys.path.insert(0, './correlation')
     import correlation  # you should consider upgrading python
-# end
 
 backwarp_tenGrid = {}
 backwarp_tenPartial = {}
-
-##########################################################
 
 assert (int(str('').join(torch.__version__.split('.')[0:2])) >= 13)  # requires at least pytorch version 1.3.0
 
@@ -353,8 +350,8 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
 if __name__ == '__main__':
     netNetwork = PWCNet().cuda().eval()
 
-    tenFlow = runPWC('dataset/in002785.jpg',
-                     'dataset/in002788.jpg', netNetwork)
+    tenFlow = runPWC('images/in002785.jpg',
+                     'images/in002788.jpg', netNetwork)
 
     mag = tenFlow[0, :, :]
     ang = tenFlow[1, :, :]
