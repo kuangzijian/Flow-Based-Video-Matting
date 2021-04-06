@@ -58,7 +58,7 @@ def get_args():
     parser.add_argument('--input', '-i',  default='dataset/unet_testing/', metavar='INPUT', nargs='+',
                         help='path of input dataset')
 
-    parser.add_argument('--output', '-o', default='dataset/unet_testing/unet_outputs/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/unet_testing/unet_testing_outputs/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",

@@ -17,7 +17,7 @@ from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 
 dir_img = 'dataset/unet_training/'
-dir_mask = 'dataset/unet_gt/'
+dir_mask = 'dataset/unet_training/unet_gt/'
 dir_checkpoint = 'checkpoints/'
 
 
