@@ -22,9 +22,6 @@ assert (int(str('').join(torch.__version__.split('.')[0:2])) >= 13)  # requires 
 # torch.set_grad_enabled(False) # make sure to not compute gradients for computational performance
 torch.backends.cudnn.enabled = True  # make sure to use cudnn for computational performance
 
-
-##########################################################
-
 def backwarp(tenInput, tenFlow):
     if str(tenFlow.shape) not in backwarp_tenGrid:
         tenHor = torch.linspace(-1.0 + (1.0 / tenFlow.shape[3]), 1.0 - (1.0 / tenFlow.shape[3]), tenFlow.shape[3]).view(
@@ -54,11 +51,6 @@ def backwarp(tenInput, tenFlow):
     tenMask[tenMask < 1.0] = 0.0
 
     return tenOutput[:, :-1, :, :] * tenMask
-
-
-# end
-
-##########################################################
 
 class PWCNet(torch.nn.Module):
     def __init__(self):
@@ -133,9 +125,6 @@ class PWCNet(torch.nn.Module):
                 tenSix = self.netSix(tenFiv)
 
                 return [tenOne, tenTwo, tenThr, tenFou, tenFiv, tenSix]
-
-        # end
-        # end
 
         class Decoder(torch.nn.Module):
             def __init__(self, intLevel):
@@ -231,9 +220,6 @@ class PWCNet(torch.nn.Module):
                     'tenFeat': tenFeat
                 }
 
-        # end
-        # end
-
         class Refiner(torch.nn.Module):
             def __init__(self):
                 super(Refiner, self).__init__()
@@ -260,8 +246,6 @@ class PWCNet(torch.nn.Module):
             def forward(self, tenInput):
                 return self.netMain(tenInput)
 
-        # end
-        # end
         self.netExtractor = Extractor()
 
         self.netTwo = Decoder(2)
@@ -276,9 +260,6 @@ class PWCNet(torch.nn.Module):
                                   url='http://content.sniklaus.com/github/pytorch-pwc/network-' + "default" + '.pytorch',
                                   file_name='pwc-' + "default").items()})
 
-    # self.load_state_dict({ strKey.replace('module', 'net'): tenWeight for strKey, tenWeight in torch.hub.load_state_dict_from_url(url='http://content.sniklaus.com/github/pytorch-pwc/network-' + arguments_strModel + '.pytorch', file_name='pwc-' + arguments_strModel).items() })
-    # end
-
     def forward(self, tenFirst, tenSecond):
         tenFirst = self.netExtractor(tenFirst)
         tenSecond = self.netExtractor(tenSecond)
@@ -290,13 +271,6 @@ class PWCNet(torch.nn.Module):
         objEstimate = self.netTwo(tenFirst[-5], tenSecond[-5], objEstimate)
 
         return objEstimate['tenFlow'] + self.netRefiner(objEstimate['tenFeat'])
-
-
-# end
-# end
-
-
-##########################################################
 
 def estimate(tenFirst, tenSecond, netNetwork):
     assert (tenFirst.shape[2] == tenSecond.shape[2])
@@ -327,10 +301,6 @@ def estimate(tenFirst, tenSecond, netNetwork):
     # print(tenFlow.shape)
     return tenFlow
 
-
-##########################################################
-
-
 def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
     I1 = (numpy.ascontiguousarray(
         numpy.array(PIL.Image.open(arguments_strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
@@ -345,7 +315,6 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
     flow = np.array(tenOutput[0].detach().cpu().numpy(), np.float32)
 
     return flow
-
 
 if __name__ == '__main__':
     netNetwork = PWCNet().cuda().eval()
