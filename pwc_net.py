@@ -341,13 +341,18 @@ def run_pwc_from_dir(path):
         hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
         rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
-        cv2.imwrite('results/flow_' + str(i) + '.png', rgb)
-
+        if args.testing == False:
+            cv2.imwrite('dataset/unet_training/flow_' + str(i) + '.png', rgb)
+        else:
+            cv2.imwrite('dataset/unet_testing/flow_' + str(i) + '.png', rgb)
         i += 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dataset", default='dataset', help="Directory of the dataset.")
+    parser.add_argument('-t', '--testing', action='store_true',
+                        help="Generate training dataset for UNet",
+                        default=False)
     args = parser.parse_args()
     path = args.dataset
     if os.path.isdir(path):

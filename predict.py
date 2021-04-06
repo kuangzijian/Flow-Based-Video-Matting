@@ -60,9 +60,9 @@ def get_args():
 
     parser.add_argument('--output', '-o', default='dataset/unet_testing/unet_outputs/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
-    parser.add_argument('--viz', '-v', action='store_true',
-                        help="Visualize the dataset as they are processed",
-                        default=True)
+    parser.add_argument('--no-viz', '-v', action='store_true',
+                        help="No visualize the dataset as they are processed",
+                        default=False)
     parser.add_argument('--no-save', '-n', action='store_true',
                         help="Do not save the output masks",
                         default=False)
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
                 logging.info("Mask saved to {}".format(output_file))
 
-            if args.viz:
+            if not args.no_viz:
                 logging.info("Visualizing results for image {}, close to continue ...".format(files[i]))
                 plot_img_and_mask(img, mask)
         i += 1
