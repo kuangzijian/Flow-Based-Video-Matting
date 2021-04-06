@@ -55,14 +55,14 @@ def get_args():
     parser.add_argument('--model', '-m', default='model/model.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--input', '-i',  default='data/unet_input/', metavar='INPUT', nargs='+',
-                        help='filenames of input dataset')
+    parser.add_argument('--input', '-i',  default='dataset/unet_testing/', metavar='INPUT', nargs='+',
+                        help='path of input dataset')
 
-    parser.add_argument('--output', '-o', default='data/unet_output/', metavar='INPUT', nargs='+',
-                        help='Filenames of ouput dataset')
+    parser.add_argument('--output', '-o', default='dataset/unet_testing/unet_outputs/', metavar='INPUT', nargs='+',
+                        help='path of ouput dataset')
     parser.add_argument('--viz', '-v', action='store_true',
                         help="Visualize the dataset as they are processed",
-                        default=False)
+                        default=True)
     parser.add_argument('--no-save', '-n', action='store_true',
                         help="Do not save the output masks",
                         default=False)
@@ -76,17 +76,14 @@ def get_args():
     return parser.parse_args()
 
 
-def get_output_filenames(args):
-    in_files = args.input
+def get_output_filenames(inputs, output_path):
+    in_files = inputs
     out_files = []
 
     if not args.output:
         for f in in_files:
             pathsplit = os.path.splitext(f)
             out_files.append("{}_OUT{}".format(pathsplit[0], pathsplit[1]))
-    elif len(in_files) != len(args.output):
-        logging.error("Input files and output files are not of the same length")
-        raise SystemExit()
     else:
         out_files = args.output
 
@@ -99,9 +96,7 @@ def mask_to_image(mask):
 
 if __name__ == "__main__":
     args = get_args()
-    in_files = args.input
-    out_files = get_output_filenames(args)
-
+    path = args.input
     net = UNet(n_channels=3, n_classes=1)
 
     logging.info("Loading model {}".format(args.model))
@@ -113,24 +108,28 @@ if __name__ == "__main__":
 
     logging.info("Model loaded !")
 
-    for i, fn in enumerate(in_files):
-        logging.info("\nPredicting image {} ...".format(fn))
+    files = sorted(os.listdir(path))
+    i = 0
 
-        img = Image.open(fn)
+    while i < (len(files) - 1):
+        logging.info("\nPredicting image {} ...".format(files[i]))
+        if 'png' in files[i] or 'jpg' in files[i]:
+            img = Image.open(os.path.join(path, files[i]))
 
-        mask = predict_img(net=net,
-                           full_img=img,
-                           scale_factor=args.scale,
-                           out_threshold=args.mask_threshold,
-                           device=device)
+            mask = predict_img(net=net,
+                               full_img=img,
+                               scale_factor=args.scale,
+                               out_threshold=args.mask_threshold,
+                               device=device)
 
-        if not args.no_save:
-            out_fn = out_files[i]
-            result = mask_to_image(mask)
-            result.save(out_files[i])
+            if not args.no_save:
+                output_file = args.output + 'output_' + files[i]
+                result = mask_to_image(mask)
+                result.save(output_file)
 
-            logging.info("Mask saved to {}".format(out_files[i]))
+                logging.info("Mask saved to {}".format(output_file))
 
-        if args.viz:
-            logging.info("Visualizing results for image {}, close to continue ...".format(fn))
-            plot_img_and_mask(img, mask)
+            if args.viz:
+                logging.info("Visualizing results for image {}, close to continue ...".format(files[i]))
+                plot_img_and_mask(img, mask)
+        i += 1
