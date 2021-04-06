@@ -7,6 +7,8 @@ import PIL.Image
 import sys
 import cv2
 import numpy as np
+import os, re
+import argparse
 
 try:
     from .correlation import correlation  # the custom cost volume layer
@@ -349,19 +351,40 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
 
     return flow
 
+def run_pwc_from_dir(path):
+    netNetwork = PWCNet().cuda().eval()
+    alphanum_key = lambda key: [int(re.split('-', key)[1].split('.')[0])]
+    files = sorted(os.listdir(path), key=alphanum_key)
+
+    i = 0
+    w, h = PIL.Image.open(os.path.join(path, files[0])).size
+    print(w, h)
+
+    while i < (len(files) - 1):
+        img1 = os.path.join(path, files[i])
+        img2 = os.path.join(path, files[i + 1])
+        print("Working on the optical flow between: {} and {}".format(files[i], files[i+1]))
+
+        tenFlow = runPWC(img1, img2, netNetwork)
+
+        mag = tenFlow[0, :, :]
+        ang = tenFlow[1, :, :]
+        hsv = np.zeros((h, w, 3), numpy.float32)
+        hsv[..., 1] = 255
+        hsv[..., 0] = ang * 180 / np.pi / 2
+        hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+        rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+        cv2.imwrite('results/flow_' + str(i) + '.png', rgb)
+
+        i += 1
 
 if __name__ == '__main__':
-    netNetwork = PWCNet().cuda().eval()
-
-    tenFlow = runPWC('dataset/in002785.jpg',
-                     'dataset/in002788.jpg', netNetwork)
-
-    mag = tenFlow[0, :, :]
-    ang = tenFlow[1, :, :]
-    hsv = np.zeros((240, 352, 3), numpy.float32)
-    hsv[..., 1] = 255
-    hsv[..., 0] = ang * 180 / np.pi / 2
-    hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
-    rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-
-    cv2.imwrite('results/flow.png', rgb)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--dataset", help="Directory of the dataset.")
+    args = parser.parse_args()
+    path = args.dataset
+    if os.path.isdir(path):
+        run_pwc_from_dir(path)
+    else:
+        print("Dataset path is invalid.")
