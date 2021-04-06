@@ -320,8 +320,7 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
 
 def run_pwc_from_dir(path):
     netNetwork = PWCNet().cuda().eval()
-    alphanum_key = lambda key: [int(re.split('-', key)[1].split('.')[0])]
-    files = sorted(os.listdir(path), key=alphanum_key)
+    files = sorted(os.listdir(path))
 
     i = 0
     w, h = PIL.Image.open(os.path.join(path, files[0])).size
@@ -348,7 +347,7 @@ def run_pwc_from_dir(path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--dataset", help="Directory of the dataset.")
+    parser.add_argument("-d", "--dataset", default='images', help="Directory of the dataset.")
     args = parser.parse_args()
     path = args.dataset
     if os.path.isdir(path):
