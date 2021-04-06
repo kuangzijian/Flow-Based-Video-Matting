@@ -319,14 +319,13 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
     return flow
 
 def run_pwc_from_dir(path):
+
     netNetwork = PWCNet().cuda().eval()
     files = sorted(os.listdir(path))
 
     i = 0
-    w, h = PIL.Image.open(os.path.join(path, files[0])).size
-    print(w, h)
-
     while i < (len(files) - 1):
+        w, h = PIL.Image.open(os.path.join(path, files[i])).size
         img1 = os.path.join(path, files[i])
         img2 = os.path.join(path, files[i + 1])
         print("Working on the optical flow between: {} and {}".format(files[i], files[i+1]))
@@ -349,12 +348,17 @@ def run_pwc_from_dir(path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--dataset", default='dataset', help="Directory of the dataset.")
+    parser.add_argument("-d", "--dataset", default='', help="Directory of the dataset.")
     parser.add_argument('-t', '--testing', action='store_true',
                         help="Generate training dataset for UNet",
                         default=False)
     args = parser.parse_args()
     path = args.dataset
+    if args.dataset == '':
+        if args.testing == False:
+            path = 'dataset/pwc_training'
+        else:
+            path = 'dataset/pwc_testing'
     if os.path.isdir(path):
         run_pwc_from_dir(path)
     else:
