@@ -347,7 +347,7 @@ def run_pwc_from_dir(path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--dataset", default='images', help="Directory of the dataset.")
+    parser.add_argument("-d", "--dataset", default='dataset', help="Directory of the dataset.")
     args = parser.parse_args()
     path = args.dataset
     if os.path.isdir(path):
