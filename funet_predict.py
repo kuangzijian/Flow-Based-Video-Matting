@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from PIL import Image
 from torchvision import transforms
 
-from unet import UNet
+from model import FlowUNetwork
 from utils.data_vis import plot_img_and_mask
 from utils.dataset import BasicDataset
 
@@ -56,9 +56,9 @@ def get_args():
     parser.add_argument('--model', '-m', default='checkpoints/CP_epoch5.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--input', '-i',  default='dataset/unet_testing/', metavar='INPUT', nargs='+',
+    parser.add_argument('--input', '-i',  default='dataset/funet_testing/', metavar='INPUT', nargs='+',
                         help='path of input dataset')
-    parser.add_argument('--output', '-o', default='dataset/unet_testing_outputs/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/funet_testing_outputs/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
@@ -97,7 +97,7 @@ def mask_to_image(mask):
 if __name__ == "__main__":
     args = get_args()
     path = args.input
-    net = UNet(n_channels=4, n_classes=1)
+    net = FlowUNetwork(n_channels=4, n_classes=1)
 
     logging.info("Loading model {}".format(args.model))
 

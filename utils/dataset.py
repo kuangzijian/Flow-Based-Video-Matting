@@ -9,15 +9,15 @@ from PIL import Image
 
 
 class BasicDataset(Dataset):
-    def __init__(self, imgs_dir, masks_dir, org_dir, scale=1, mask_suffix=''):
-        self.imgs_dir = imgs_dir
+    def __init__(self, int_mask_dir, masks_dir, org_dir, scale=1, mask_suffix=''):
+        self.int_mask_dir = int_mask_dir
         self.masks_dir = masks_dir
         self.org_dir = org_dir
         self.scale = scale
         self.mask_suffix = mask_suffix
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
 
-        self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
+        self.ids = [splitext(file)[0] for file in listdir(int_mask_dir)
                     if not file.startswith('.')]
         logging.info(f'Creating dataset with {len(self.ids)} examples')
 
@@ -68,18 +68,18 @@ class BasicDataset(Dataset):
     def __getitem__(self, i):
         idx = self.ids[i]
         mask_file = glob(self.masks_dir + idx + self.mask_suffix + '.*')
-        img_file = glob(self.imgs_dir + idx + '.*')
+        int_mask_file = glob(self.int_mask_dir + idx + '.*')
         org_file = glob(self.org_dir + idx + '.*')
 
         assert len(mask_file) == 1, \
             f'Either no mask or multiple masks found for the ID {idx}: {mask_file}'
-        assert len(img_file) == 1, \
-            f'Either no image or multiple images found for the ID {idx}: {img_file}'
+        assert len(int_mask_file) == 1, \
+            f'Either no image or multiple images found for the ID {idx}: {int_mask_file}'
         assert len(org_file) == 1, \
             f'Either no original image or multiple original images found for the ID {idx}: {org_file}'
 
         mask = Image.open(mask_file[0])
-        img = Image.open(img_file[0])
+        img = Image.open(int_mask_file[0])
         org_img = Image.open(org_file[0])
 
         assert img.size == mask.size, \

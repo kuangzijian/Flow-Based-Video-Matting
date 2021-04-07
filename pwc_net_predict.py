@@ -321,7 +321,7 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
 def run_pwc_from_dir(path):
 
     netNetwork = PWCNet().cuda().eval()
-    alphanum_key = lambda key: [int(re.split('-', key)[1].split('.')[0])]
+    alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
     files = sorted(os.listdir(path), key=alphanum_key)
 
     i = 0
@@ -344,15 +344,23 @@ def run_pwc_from_dir(path):
         rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
         if args.testing == False:
-            cv2.imwrite('dataset/unet_training/input/flow_' + str(i) + '.png', rgb)
+            if i == 0:
+                cv2.imwrite('dataset/intermediate_mask_training/input/intmask_' + str(1) + '.png', rgb)
+                cv2.imwrite('dataset/intermediate_mask_training/input/intmask_' + str(2) + '.png', rgb)
+            else:
+                cv2.imwrite('dataset/intermediate_mask_training/input/intmask_' + str(i+2) + '.png', rgb)
         else:
-            cv2.imwrite('dataset/unet_testing/flow_' + str(i) + '.png', rgb)
+            if i == 0:
+                cv2.imwrite('dataset/intermediate_mask_testing/input/intmask_' + str(1) + '.png', rgb)
+                cv2.imwrite('dataset/intermediate_mask_testing/input/intmask_' + str(2) + '.png', rgb)
+            else:
+                cv2.imwrite('dataset/intermediate_mask_testing/input/intmask_' + str(i + 2) + '.png', rgb)
         i += 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dataset", default='', help="Directory of the dataset.")
-    parser.add_argument("-th", "--threshold", default=1, help="Threshold to split moving object and background")
+    parser.add_argument("-th", "--threshold", default=0.5, help="Threshold to split moving object and background")
     parser.add_argument('-t', '--testing', action='store_true',
                         help="Generate training dataset for UNet",
                         default=False)
@@ -360,9 +368,9 @@ if __name__ == '__main__':
     path = args.dataset
     if args.dataset == '':
         if args.testing == False:
-            path = 'dataset/pwc_training'
+            path = 'dataset/original_training'
         else:
-            path = 'dataset/pwc_testing'
+            path = 'dataset/original_testing'
     if os.path.isdir(path):
         run_pwc_from_dir(path)
     else:
