@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-
+import re
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -58,7 +58,7 @@ def get_args():
     parser.add_argument('--input', '-i',  default='dataset/unet_testing/', metavar='INPUT', nargs='+',
                         help='path of input dataset')
 
-    parser.add_argument('--output', '-o', default='dataset/unet_testing/unet_testing_outputs/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/unet_testing_outputs/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
@@ -107,12 +107,13 @@ if __name__ == "__main__":
     net.load_state_dict(torch.load(args.model, map_location=device))
 
     logging.info("Model loaded !")
-
-    files = sorted(os.listdir(path))
+    alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
+    files = sorted(os.listdir(path), key=alphanum_key)
     i = 0
 
-    while i < (len(files) - 1):
+    while i < len(files):
         logging.info("\nPredicting image {} ...".format(files[i]))
+        print("\nPredicting image {} ...".format(files[i]))
         if 'png' in files[i] or 'jpg' in files[i]:
             img = Image.open(os.path.join(path, files[i]))
 
