@@ -15,12 +15,13 @@ from utils.dataset import BasicDataset
 
 def predict_img(net,
                 full_img,
+                org_img,
                 device,
                 scale_factor=1,
                 out_threshold=0.5):
     net.eval()
 
-    img = torch.from_numpy(BasicDataset.preprocess(full_img, scale_factor))
+    img = torch.from_numpy(BasicDataset.preprocess_input(full_img, org_img, scale_factor))
 
     img = img.unsqueeze(0)
     img = img.to(device=device, dtype=torch.float32)
@@ -52,12 +53,11 @@ def predict_img(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input dataset',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--model', '-m', default='model/model.pth',
+    parser.add_argument('--model', '-m', default='checkpoints/CP_epoch5.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
     parser.add_argument('--input', '-i',  default='dataset/unet_testing/', metavar='INPUT', nargs='+',
                         help='path of input dataset')
-
     parser.add_argument('--output', '-o', default='dataset/unet_testing_outputs/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
@@ -97,7 +97,7 @@ def mask_to_image(mask):
 if __name__ == "__main__":
     args = get_args()
     path = args.input
-    net = UNet(n_channels=3, n_classes=1)
+    net = UNet(n_channels=4, n_classes=1)
 
     logging.info("Loading model {}".format(args.model))
 
@@ -110,15 +110,18 @@ if __name__ == "__main__":
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
     files = sorted(os.listdir(path), key=alphanum_key)
     i = 0
+    dir_org = 'dataset/pwc_testing/'
 
     while i < len(files):
         logging.info("\nPredicting image {} ...".format(files[i]))
         print("\nPredicting image {} ...".format(files[i]))
-        if 'png' in files[i] or 'jpg' in files[i]:
+        if 'png' in files[i] or 'jpg' in files[i] or 'bmp' in files[i]:
             img = Image.open(os.path.join(path, files[i]))
+            org_img = Image.open(os.path.join(dir_org, files[i].split('.')[0]+'.bmp'))
 
             mask = predict_img(net=net,
                                full_img=img,
+                               org_img=org_img,
                                scale_factor=args.scale,
                                out_threshold=args.mask_threshold,
                                device=device)

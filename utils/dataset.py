@@ -9,9 +9,10 @@ from PIL import Image
 
 
 class BasicDataset(Dataset):
-    def __init__(self, imgs_dir, masks_dir, scale=1, mask_suffix=''):
+    def __init__(self, imgs_dir, masks_dir, org_dir, scale=1, mask_suffix=''):
         self.imgs_dir = imgs_dir
         self.masks_dir = masks_dir
+        self.org_dir = org_dir
         self.scale = scale
         self.mask_suffix = mask_suffix
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
@@ -42,22 +43,52 @@ class BasicDataset(Dataset):
 
         return img_trans
 
+    @classmethod
+    def preprocess_input(cls, pil_img, org_img, scale):
+        w, h = pil_img.size
+        newW, newH = int(scale * w), int(scale * h)
+        assert newW > 0 and newH > 0, 'Scale is too small'
+        pil_img = pil_img.resize((newW, newH)).convert('L')
+        org_img = org_img.resize((newW, newH))
+
+        img_nd = np.array(pil_img)
+        img_nd = np.expand_dims(img_nd, axis=2)
+        org_img_nd = np.array(org_img)
+        concat_img_nd = np.concatenate((img_nd, org_img_nd), axis=2)
+
+        # print(img_nd.shape, concat_img_nd.shape)
+
+        # HWC to CHW
+        img_trans = concat_img_nd.transpose((2, 0, 1))
+        if img_trans.max() > 1:
+            img_trans = img_trans / 255
+
+        return img_trans
+
     def __getitem__(self, i):
         idx = self.ids[i]
         mask_file = glob(self.masks_dir + idx + self.mask_suffix + '.*')
         img_file = glob(self.imgs_dir + idx + '.*')
+        org_file = glob(self.org_dir + idx + '.*')
 
         assert len(mask_file) == 1, \
             f'Either no mask or multiple masks found for the ID {idx}: {mask_file}'
         assert len(img_file) == 1, \
             f'Either no image or multiple images found for the ID {idx}: {img_file}'
+        assert len(org_file) == 1, \
+            f'Either no original image or multiple original images found for the ID {idx}: {org_file}'
+
         mask = Image.open(mask_file[0])
         img = Image.open(img_file[0])
+        org_img = Image.open(org_file[0])
 
         assert img.size == mask.size, \
             f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
 
-        img = self.preprocess(img, self.scale)
+        assert img.size == org_img.size, \
+            f'Original image and intermediate mask {idx} should be the same size, but are {org_img.size} and {img.size}'
+
+        img = self.preprocess_input(img, org_img, self.scale)
         mask = self.preprocess(mask, self.scale)
 
         return {

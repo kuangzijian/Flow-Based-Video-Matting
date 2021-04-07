@@ -321,7 +321,8 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
 def run_pwc_from_dir(path):
 
     netNetwork = PWCNet().cuda().eval()
-    files = sorted(os.listdir(path))
+    alphanum_key = lambda key: [int(re.split('-', key)[1].split('.')[0])]
+    files = sorted(os.listdir(path), key=alphanum_key)
 
     i = 0
     while i < (len(files) - 1):
@@ -343,7 +344,7 @@ def run_pwc_from_dir(path):
         rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
         if args.testing == False:
-            cv2.imwrite('dataset/unet_training/flow_' + str(i) + '.png', rgb)
+            cv2.imwrite('dataset/unet_training/input/flow_' + str(i) + '.png', rgb)
         else:
             cv2.imwrite('dataset/unet_testing/flow_' + str(i) + '.png', rgb)
         i += 1
