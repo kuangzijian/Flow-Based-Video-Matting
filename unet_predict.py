@@ -111,7 +111,7 @@ if __name__ == "__main__":
     files = sorted(os.listdir(path), key=alphanum_key)
     i = 0
 
-    while i < (len(files) - 1):
+    while i < len(files):
         logging.info("\nPredicting image {} ...".format(files[i]))
         print("\nPredicting image {} ...".format(files[i]))
         if 'png' in files[i] or 'jpg' in files[i]:
