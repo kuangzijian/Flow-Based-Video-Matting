@@ -324,7 +324,7 @@ def run_pwc_from_dir(path):
     files = sorted(os.listdir(path))
 
     i = 0
-    while i < len(files):
+    while i < (len(files) - 1):
         w, h = PIL.Image.open(os.path.join(path, files[i])).size
         img1 = os.path.join(path, files[i])
         img2 = os.path.join(path, files[i + 1])
