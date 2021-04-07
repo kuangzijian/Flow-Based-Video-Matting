@@ -15,8 +15,9 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 
-dir_img = 'dataset/unet_training/'
+dir_img = 'dataset/unet_training/input/'
 dir_mask = 'dataset/unet_training/unet_gt/'
+dir_org = 'dataset/pwc_training/'
 dir_checkpoint = 'checkpoints/'
 
 
@@ -29,7 +30,7 @@ def train_net(net,
               save_cp=True,
               img_scale=1):
 
-    dataset = BasicDataset(dir_img, dir_mask, img_scale)
+    dataset = BasicDataset(dir_img, dir_mask, dir_org, img_scale)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -42,7 +43,7 @@ def train_net(net,
     logging.info(f'''Starting training:
         Epochs:          {epochs}
         Batch size:      {batch_size}
-        Learning rate:   {lr}
+        Learning rate:   {lr}D
         Training size:   {n_train}
         Validation size: {n_val}
         Checkpoints:     {save_cp}
@@ -104,7 +105,7 @@ def train_net(net,
                         logging.info('Validation Dice Coeff: {}'.format(val_score))
                         writer.add_scalar('Dice/test', val_score, global_step)
 
-                    writer.add_images('dataset', imgs, global_step)
+                    # writer.add_images('dataset', imgs, global_step)
                     if net.n_classes == 1:
                         writer.add_images('masks/true', true_masks, global_step)
                         writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
@@ -153,7 +154,8 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-    net = FlowUNetwork(n_channels=3, n_classes=1, bilinear=True)
+    net = UNet(n_channels=4, n_classes=1, bilinear=True)
+
     logging.info(f'Network:\n'
                  f'\t{net.n_channels} input channels\n'
                  f'\t{net.n_classes} output channels (classes)\n'
