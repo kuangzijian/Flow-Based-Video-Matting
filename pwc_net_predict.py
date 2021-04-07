@@ -333,11 +333,13 @@ def run_pwc_from_dir(path):
         tenFlow = runPWC(img1, img2, netNetwork)
 
         mag = tenFlow[0, :, :]
-        ang = tenFlow[1, :, :]
+        # split the moving object and background using a threshold
+        mag = [[0 if x < args.threshold else 255 for x in y] for y in mag]
+        #ang = tenFlow[1, :, :]
         hsv = np.zeros((h, w, 3), numpy.float32)
-        hsv[..., 1] = 255
-        hsv[..., 0] = ang * 180 / np.pi / 2
-        hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+        #hsv[..., 1] = 255
+        #hsv[..., 0] = cv2.normalize(ang * 180 / np.pi / 2, None, 0, 255, cv2.NORM_MINMAX)
+        hsv[..., 2] = mag
         rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
         if args.testing == False:
@@ -349,6 +351,7 @@ def run_pwc_from_dir(path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dataset", default='', help="Directory of the dataset.")
+    parser.add_argument("-th", "--threshold", default=1, help="Threshold to split moving object and background")
     parser.add_argument('-t', '--testing', action='store_true',
                         help="Generate training dataset for UNet",
                         default=False)
