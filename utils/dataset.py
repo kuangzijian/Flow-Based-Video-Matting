@@ -4,7 +4,7 @@ import numpy as np
 from glob import glob
 import torch
 from torch.utils.data import Dataset
-import logging
+import logging, os, re
 from PIL import Image
 
 
@@ -15,9 +15,18 @@ class BasicDataset(Dataset):
         self.org_dir = org_dir
         self.scale = scale
         self.mask_suffix = mask_suffix
+        self.org_prefix = 'original_'
+        self.intmask_prefix = 'intmask_'
+        self.gt_prefix = 'gt_'
+
+        alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
+        files = sorted(os.listdir(org_dir), key=alphanum_key)
+        sizes = [Image.open(os.path.join(org_dir, f), 'r').size for f in files]
+        self.size = max(sizes)
+
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
 
-        self.ids = [splitext(file)[0] for file in listdir(int_mask_dir)
+        self.ids = [splitext(file)[0].split('_')[1] for file in listdir(int_mask_dir)
                     if not file.startswith('.')]
         logging.info(f'Creating dataset with {len(self.ids)} examples')
 
@@ -67,9 +76,9 @@ class BasicDataset(Dataset):
 
     def __getitem__(self, i):
         idx = self.ids[i]
-        mask_file = glob(self.masks_dir + idx + self.mask_suffix + '.*')
-        int_mask_file = glob(self.int_mask_dir + idx + '.*')
-        org_file = glob(self.org_dir + idx + '.*')
+        mask_file = glob(self.masks_dir + self.gt_prefix + idx + self.mask_suffix + '.*')
+        int_mask_file = glob(self.int_mask_dir + self.intmask_prefix + idx + '.*')
+        org_file = glob(self.org_dir + self.org_prefix + idx + '.*')
 
         assert len(mask_file) == 1, \
             f'Either no mask or multiple masks found for the ID {idx}: {mask_file}'
@@ -78,9 +87,9 @@ class BasicDataset(Dataset):
         assert len(org_file) == 1, \
             f'Either no original image or multiple original images found for the ID {idx}: {org_file}'
 
-        mask = Image.open(mask_file[0])
-        img = Image.open(int_mask_file[0])
-        org_img = Image.open(org_file[0])
+        mask = Image.open(mask_file[0]).resize(self.size)
+        img = Image.open(int_mask_file[0]).resize(self.size)
+        org_img = Image.open(org_file[0]).resize(self.size)
 
         assert img.size == mask.size, \
             f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'

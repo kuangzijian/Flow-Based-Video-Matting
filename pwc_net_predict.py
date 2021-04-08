@@ -44,8 +44,7 @@ def backwarp(tenInput, tenFlow):
     tenInput = torch.cat([tenInput, backwarp_tenPartial[str(tenFlow.shape)]], 1)
 
     tenOutput = torch.nn.functional.grid_sample(input=tenInput,
-                                                grid=(backwarp_tenGrid[str(tenFlow.shape)] + tenFlow).permute(0, 2, 3,
-                                                                                                              1),
+                                                grid=(backwarp_tenGrid[str(tenFlow.shape)] + tenFlow).permute(0, 2, 3, 1),
                                                 mode='bilinear', padding_mode='zeros', align_corners=False)
 
     tenMask = tenOutput[:, -1:, :, :]
@@ -303,12 +302,16 @@ def estimate(tenFirst, tenSecond, netNetwork):
     # print(tenFlow.shape)
     return tenFlow
 
-def runPWC(arguments_strFirst, arguments_strSecond, netNetwork):
+def runPWC(arguments_strFirst, arguments_strSecond, netNetwork, sizes):
+    img1 = PIL.Image.open(arguments_strFirst).resize(sizes)
+    img2 = PIL.Image.open(arguments_strSecond).resize(sizes)
+
+
     I1 = (numpy.ascontiguousarray(
-        numpy.array(PIL.Image.open(arguments_strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+        numpy.array(img1)[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
                     1.0 / 255.0)))
     I2 = (numpy.ascontiguousarray(
-        numpy.array(PIL.Image.open(arguments_strSecond))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+        numpy.array(img2)[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
                     1.0 / 255.0)))
     tenFirst = torch.FloatTensor([I1]).cuda()
     tenSecond = torch.FloatTensor([I2]).cuda()
@@ -324,14 +327,18 @@ def run_pwc_from_dir(path):
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
     files = sorted(os.listdir(path), key=alphanum_key)
 
+    sizes = [PIL.Image.open(os.path.join(path, f), 'r').size for f in files]
+    sizes = max(sizes)
+    print("Max size:", sizes)
+
     i = 0
     while i < (len(files) - 1):
-        w, h = PIL.Image.open(os.path.join(path, files[i])).size
+        w, h = sizes
         img1 = os.path.join(path, files[i])
         img2 = os.path.join(path, files[i + 1])
         print("Working on the optical flow between: {} and {}".format(files[i], files[i+1]))
 
-        tenFlow = runPWC(img1, img2, netNetwork)
+        tenFlow = runPWC(img1, img2, netNetwork, sizes)
 
         mag = tenFlow[0, :, :]
         # split the moving object and background using a threshold
