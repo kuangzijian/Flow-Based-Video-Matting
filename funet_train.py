@@ -15,9 +15,9 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 
-dir_img = 'dataset/funet_training/input/'
-dir_mask = 'dataset/funet_training/unet_gt/'
-dir_org = 'dataset/pwc_training/'
+dir_img = 'dataset/intermediate_mask_training/input/'
+dir_mask = 'dataset/intermediate_mask_training/groudtruth/'
+dir_org = 'dataset/original_training/'
 dir_checkpoint = 'checkpoints/'
 
 
@@ -43,7 +43,7 @@ def train_net(net,
     logging.info(f'''Starting training:
         Epochs:          {epochs}
         Batch size:      {batch_size}
-        Learning rate:   {lr}D
+        Learning rate:   {lr}
         Training size:   {n_train}
         Validation size: {n_val}
         Checkpoints:     {save_cp}
