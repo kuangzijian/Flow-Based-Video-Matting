@@ -17,7 +17,7 @@ def predict_img(net,
                 full_img,
                 org_img,
                 device,
-                scale_factor=1,
+                scale_factor=0.5,
                 out_threshold=0.5):
     net.eval()
 
@@ -53,12 +53,12 @@ def predict_img(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input dataset',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--model', '-m', default='checkpoints/CP_epoch5.pth',
+    parser.add_argument('--model', '-m', default='checkpoints/CP_epoch9.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--input', '-i',  default='dataset/funet_testing/', metavar='INPUT', nargs='+',
+    parser.add_argument('--input', '-i',  default='dataset/intermediate_mask_testing/input/', metavar='INPUT', nargs='+',
                         help='path of input dataset')
-    parser.add_argument('--output', '-o', default='dataset/funet_testing_outputs/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
@@ -110,14 +110,14 @@ if __name__ == "__main__":
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
     files = sorted(os.listdir(path), key=alphanum_key)
     i = 0
-    dir_org = 'dataset/pwc_testing/'
+    dir_org = 'dataset/intermediate_mask_testing/input/'
 
     while i < len(files):
         logging.info("\nPredicting image {} ...".format(files[i]))
         print("\nPredicting image {} ...".format(files[i]))
         if 'png' in files[i] or 'jpg' in files[i] or 'bmp' in files[i]:
             img = Image.open(os.path.join(path, files[i]))
-            org_img = Image.open(os.path.join(dir_org, files[i].split('.')[0]+'.bmp'))
+            org_img = Image.open(os.path.join(dir_org, files[i].split('.')[0]+'.png'))
 
             mask = predict_img(net=net,
                                full_img=img,
