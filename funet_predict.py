@@ -56,10 +56,12 @@ def get_args():
     parser.add_argument('--model', '-m', default='checkpoints/CP_epoch5.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--input', '-i',  default='dataset/funet_testing/', metavar='INPUT', nargs='+',
+    parser.add_argument('--input', '-i',  default='dataset/intermediate_mask_testing/input/', metavar='INPUT', nargs='+',
                         help='path of input dataset')
     parser.add_argument('--output', '-o', default='dataset/funet_testing_outputs/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
+    parser.add_argument('--org_dir', '-d', default='dataset/original_testing/', metavar='INPUT', nargs='+',
+                        help='path of original test dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
                         default=False)
@@ -109,15 +111,19 @@ if __name__ == "__main__":
     logging.info("Model loaded !")
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
     files = sorted(os.listdir(path), key=alphanum_key)
+    org_test_prefix = 'original_'
     i = 0
-    dir_org = 'dataset/pwc_testing/'
 
     while i < len(files):
         logging.info("\nPredicting image {} ...".format(files[i]))
         print("\nPredicting image {} ...".format(files[i]))
         if 'png' in files[i] or 'jpg' in files[i] or 'bmp' in files[i]:
+            id_suffix = files[i].split('_')[1].split('.')
+            id = id_suffix[0]
+            # suffix = id_suffix[1]
+
             img = Image.open(os.path.join(path, files[i]))
-            org_img = Image.open(os.path.join(dir_org, files[i].split('.')[0]+'.bmp'))
+            org_img = Image.open(os.path.join(args.org_dir, org_test_prefix + id + '.bmp'))
 
             mask = predict_img(net=net,
                                full_img=img,
