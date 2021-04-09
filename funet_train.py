@@ -56,7 +56,7 @@ def train_net(net,
     if net.n_classes > 1:
         criterion = nn.CrossEntropyLoss()
     else:
-        criterion = nn.BCEWithLogitsLoss()
+        criterion = nn.L1Loss()
 
     for epoch in range(epochs):
         net.train()
@@ -74,7 +74,7 @@ def train_net(net,
                 imgs = imgs.to(device=device, dtype=torch.float32)
                 mask_type = torch.float32 if net.n_classes == 1 else torch.long
                 true_masks = true_masks.to(device=device, dtype=mask_type)
-
+                optimizer.zero_grad()
                 masks_pred = net(imgs)
                 loss = criterion(masks_pred, true_masks)
                 epoch_loss += loss.item()
@@ -82,9 +82,9 @@ def train_net(net,
 
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
 
-                optimizer.zero_grad()
+
                 loss.backward()
-                nn.utils.clip_grad_value_(net.parameters(), 0.1)
+                #nn.utils.clip_grad_value_(net.parameters(), 0.1)
                 optimizer.step()
 
                 pbar.update(imgs.shape[0])
