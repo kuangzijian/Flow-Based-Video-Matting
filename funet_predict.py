@@ -78,20 +78,6 @@ def get_args():
     return parser.parse_args()
 
 
-def get_output_filenames(inputs, output_path):
-    in_files = inputs
-    out_files = []
-
-    if not args.output:
-        for f in in_files:
-            pathsplit = os.path.splitext(f)
-            out_files.append("{}_OUT{}".format(pathsplit[0], pathsplit[1]))
-    else:
-        out_files = args.output
-
-    return out_files
-
-
 def mask_to_image(mask):
     return Image.fromarray((mask * 255).astype(np.uint8))
 
