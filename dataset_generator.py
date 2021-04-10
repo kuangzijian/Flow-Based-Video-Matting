@@ -12,7 +12,7 @@ while success:
     count +=1
 
 # generate ground truth mask for each frame
-for i in range(1000):
+for i in range(count):
     img = cv2.imread('frames/original4_' + str(i + 1) + '.jpg')
     print('Generating mask for : ', i)
     mask = []
@@ -32,7 +32,7 @@ for i in range(1000):
     cv2.imwrite('ground_truth/gt4_' + str(i + 1) + '.jpg', 255 - (255 * mask))
 
 # apply mask to each frame to remove green screen background
-for i in range(1000):
+for i in range(count):
     img = cv2.imread('frames/original4_' + str(i + 1) + '.jpg')
     mask = cv2.imread('ground_truth/gt4_' + str(i + 1) + '.jpg')
     mask = mask / 255  # make the mask into 0/1 matrix for multiplication
