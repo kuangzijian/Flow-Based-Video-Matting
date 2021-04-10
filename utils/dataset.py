@@ -9,14 +9,12 @@ from PIL import Image
 
 
 class BasicDataset(Dataset):
-    def __init__(self, int_mask_dir, masks_dir, org_dir, scale=1, mask_suffix=''):
-        self.int_mask_dir = int_mask_dir
+    def __init__(self, masks_dir, org_dir, scale=1, mask_suffix=''):
         self.masks_dir = masks_dir
         self.org_dir = org_dir
         self.scale = scale
         self.mask_suffix = mask_suffix
         self.org_prefix = 'original_'
-        self.intmask_prefix = 'intmask_'
         self.gt_prefix = 'gt_'
 
         alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
@@ -26,7 +24,7 @@ class BasicDataset(Dataset):
 
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
 
-        self.ids = [splitext(file)[0].split('_')[1] for file in listdir(int_mask_dir)
+        self.ids = [splitext(file)[0].split('_')[1] for file in listdir(org_dir)
                     if not file.startswith('.')]
         logging.info(f'Creating dataset with {len(self.ids)} examples')
 
@@ -53,19 +51,17 @@ class BasicDataset(Dataset):
         return img_trans
 
     @classmethod
-    def preprocess_input(cls, pil_img, org_img, scale):
-        w, h = pil_img.size
+    def preprocess_input_with_int_mask(cls, int_mask, org_img, scale):
+        w, h = int_mask.size
         newW, newH = int(scale * w), int(scale * h)
         assert newW > 0 and newH > 0, 'Scale is too small'
-        pil_img = pil_img.resize((newW, newH)).convert('L')
+        int_mask = int_mask.resize((newW, newH)).convert('L')
         org_img = org_img.resize((newW, newH))
 
-        img_nd = np.array(pil_img)
-        img_nd = np.expand_dims(img_nd, axis=2)
+        int_mask_nd = np.array(int_mask)
+        int_mask_nd = np.expand_dims(int_mask_nd, axis=2)
         org_img_nd = np.array(org_img)
-        concat_img_nd = np.concatenate((img_nd, org_img_nd), axis=2)
-
-        # print(img_nd.shape, concat_img_nd.shape)
+        concat_img_nd = np.concatenate((int_mask_nd, org_img_nd), axis=2)
 
         # HWC to CHW
         img_trans = concat_img_nd.transpose((2, 0, 1))
@@ -77,27 +73,17 @@ class BasicDataset(Dataset):
     def __getitem__(self, i):
         idx = self.ids[i]
         mask_file = glob(self.masks_dir + self.gt_prefix + idx + self.mask_suffix + '.*')
-        int_mask_file = glob(self.int_mask_dir + self.intmask_prefix + idx + '.*')
         org_file = glob(self.org_dir + self.org_prefix + idx + '.*')
 
         assert len(mask_file) == 1, \
             f'Either no mask or multiple masks found for the ID {idx}: {mask_file}'
-        assert len(int_mask_file) == 1, \
-            f'Either no image or multiple images found for the ID {idx}: {int_mask_file}'
         assert len(org_file) == 1, \
             f'Either no original image or multiple original images found for the ID {idx}: {org_file}'
 
         mask = Image.open(mask_file[0]).resize(self.size).convert('L')
-        img = Image.open(int_mask_file[0]).resize(self.size)
         org_img = Image.open(org_file[0]).resize(self.size)
 
-        assert img.size == mask.size, \
-            f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
-
-        assert img.size == org_img.size, \
-            f'Original image and intermediate mask {idx} should be the same size, but are {org_img.size} and {img.size}'
-
-        img = self.preprocess_input(img, org_img, self.scale)
+        img = self.preprocess(org_img, self.scale)
         mask = self.preprocess(mask, self.scale)
 
         return {

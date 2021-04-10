@@ -15,7 +15,6 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 
-dir_img = 'dataset/intermediate_mask_training/input/'
 dir_mask = 'dataset/intermediate_mask_training/groudtruth/'
 dir_org = 'dataset/original_training/'
 dir_checkpoint = 'checkpoints/'
@@ -23,14 +22,14 @@ dir_checkpoint = 'checkpoints/'
 
 def train_net(net,
               device,
-              epochs=5,
+              epochs=6,
               batch_size=1,
               lr=0.001,
               val_percent=0.1,
               save_cp=True,
               img_scale=1):
 
-    dataset = BasicDataset(dir_img, dir_mask, dir_org, img_scale)
+    dataset = BasicDataset(dir_mask, dir_org, img_scale)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -180,7 +179,8 @@ if __name__ == '__main__':
                   img_scale=args.scale,
                   val_percent=args.val / 100)
     except KeyboardInterrupt:
-        torch.save(net.state_dict(), 'INTERRUPTED.pth')
+        torch.save(net.state_dict(),
+                   dir_checkpoint + f'INTERRUPTED.pth')
         logging.info('Saved interrupt')
         try:
             sys.exit(0)

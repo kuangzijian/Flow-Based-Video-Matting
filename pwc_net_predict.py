@@ -354,33 +354,32 @@ def run_pwc_from_dir(path):
         #hsv[..., 0] = ang * 180 / np.pi / 2
         hsv[..., 2] = mag
         if i == 0:
-            #hsv[..., 2] = mag
+            hsv[..., 2] = mag
             rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-            #temp = rgb
+            temp = rgb
 
             # duplicate the first optical flow generated for the first frame
             cv2.imwrite(output_path + 'intmask_' + str(1) + '.png', rgb)
             cv2.imwrite(output_path + 'intmask_' + str(2) + '.png', rgb)
 
         else:
-            #hsv[..., 2] = mag
-            #rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+            hsv[..., 2] = mag
+            rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
             # get warpped using previous rgb and the current rgb
-            #warpped = softsplat_warp(torch.FloatTensor([temp.transpose(2, 0, 1)]).cuda(),
-            #               torch.FloatTensor([rgb.transpose(2, 0, 1)]).cuda(), tenFlow_raw)
+            warpped = softsplat_warp(torch.FloatTensor([temp.transpose(2, 0, 1)]).cuda(),
+                           torch.FloatTensor([rgb.transpose(2, 0, 1)]).cuda(), tenFlow_raw)
 
             # assign the 0 valued element in magnitude channel with value of warpped
-            #for r_index, r in enumerate(mag):
-            #    for c_index, c in enumerate(r):
-            #        if c < args.threshold:
-            #            mag[r_index][c_index] = warpped[0][0][r_index][c_index]
-            #        else:
-            #            mag[r_index][c_index] = 255
-            #hsv[..., 2] = mag
+            for r_index, r in enumerate(mag):
+                for c_index, c in enumerate(r):
+                    if c < args.threshold:
+                        mag[r_index][c_index] = warpped[0][0][r_index][c_index]
+                    else:
+                        mag[r_index][c_index] = 255
+            hsv[..., 2] = mag
             rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
             temp = rgb
             cv2.imwrite(output_path + 'intmask_' + str(i + 2) + '.png', rgb)
-
         i += 1
 
 def softsplat_backwarp(tenInput, tenFlow):

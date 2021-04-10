@@ -5,13 +5,15 @@ import re
 import numpy as np
 import torch
 import torch.nn.functional as F
+import numpy
+import cv2
 from PIL import Image
 from torchvision import transforms
 
 from model import FlowUNetwork
 from utils.data_vis import plot_img_and_mask
 from utils.dataset import BasicDataset
-
+from pwc_net_predict import runPWC, PWCNet
 
 def predict_img(net,
                 int_mask,
@@ -21,7 +23,7 @@ def predict_img(net,
                 out_threshold=0.5):
     net.eval()
 
-    img = torch.from_numpy(BasicDataset.preprocess_input(int_mask, org_img, scale_factor))
+    img = torch.from_numpy(BasicDataset.preprocess_input_with_int_mask(int_mask, org_img, scale_factor))
 
     img = img.unsqueeze(0)
     img = img.to(device=device, dtype=torch.float32)
@@ -56,8 +58,6 @@ def get_args():
     parser.add_argument('--model', '-m', default='checkpoints/CP_epoch6.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--mask', '-im',  default='dataset/intermediate_mask_training/input/', metavar='INPUT', nargs='+',
-                        help='path of intermediate mask dataset')
     parser.add_argument('--img', '-img', default='dataset/original_training/', metavar='INPUT', nargs='+',
                         help='path of original image dataset')
     parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
@@ -73,7 +73,7 @@ def get_args():
                         default=0.5)
     parser.add_argument('--scale', '-s', type=float,
                         help="Scale factor for the input dataset",
-                        default=0.5)
+                        default=1)
 
     return parser.parse_args()
 
@@ -98,7 +98,6 @@ def mask_to_image(mask):
 
 if __name__ == "__main__":
     args = get_args()
-    int_mask_path = args.mask
     org_img_path = args.img
     net = FlowUNetwork(n_channels=4, n_classes=1)
 
@@ -110,18 +109,38 @@ if __name__ == "__main__":
     net.load_state_dict(torch.load(args.model, map_location=device))
 
     logging.info("Model loaded !")
+    print("Model loaded !")
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
-    mask_files = sorted(os.listdir(int_mask_path), key=alphanum_key)
     img_files = sorted(os.listdir(org_img_path), key=alphanum_key)
     i = 0
-
-    while i < len(mask_files):
+    pwcNetwork = PWCNet().cuda().eval()
+    while i < len(img_files):
         logging.info("\nPredicting image {} ...".format(img_files[i]))
         print("\nPredicting image {} ...".format(img_files[i]))
-        if 'png' in mask_files[i] or 'jpg' in mask_files[i] or 'bmp' in mask_files[i]:
-            int_mask = Image.open(os.path.join(int_mask_path, mask_files[i]))
-            org_img = Image.open(os.path.join(org_img_path, img_files[i].split('.')[0]+'.jpg'))
+        if 'png' in img_files[i] or 'jpg' in img_files[i] or 'bmp' in img_files[i]:
+            org_img = Image.open(os.path.join(org_img_path, img_files[i].split('.')[0] + '.jpg'))
+            if i == 0:
+                # for the first frame, since there is no previous frame, we estimate the optical flow using it self
+                previous_img = img = os.path.join(org_img_path, img_files[i])
+            else:
+                # we estimate the optical flow for each two frames
+                previous_img = os.path.join(org_img_path, img_files[i-1])
+                img = os.path.join(org_img_path, img_files[i])
 
+            # estimate the optical flow
+            tenFlow_raw = runPWC(previous_img, img, pwcNetwork, org_img.size)
+            tenFlow = np.array(tenFlow_raw[0].detach().cpu().numpy(), np.float32)
+            w, h = org_img.size
+            mag = tenFlow[0, :, :]
+
+            # split the moving object and background using a mask threshold
+            mag = [[0 if x < args.mask_threshold else 255 for x in y] for y in mag]
+            hsv = np.zeros((h, w, 3), numpy.float32)
+            hsv[..., 2] = mag
+            int_mask = cv2.cvtColor(hsv, cv2.COLOR_BGR2RGB)
+            int_mask = Image.fromarray(np.uint8(int_mask))
+
+            # predict mask using flowUNet
             mask = predict_img(net=net,
                                int_mask=int_mask,
                                org_img=org_img,
@@ -139,4 +158,6 @@ if __name__ == "__main__":
             if not args.no_viz:
                 logging.info("Visualizing results for image {}, close to continue ...".format(img_files[i]))
                 plot_img_and_mask(org_img, mask)
+                # todo: replace background based on mask and provided bg.
+                # todo: using openCV to display original image, predicted mask and new image with replaced bg.
         i += 1
