@@ -14,14 +14,14 @@ from utils.dataset import BasicDataset
 
 
 def predict_img(net,
-                full_img,
+                int_mask,
                 org_img,
                 device,
                 scale_factor=0.5,
                 out_threshold=0.5):
     net.eval()
 
-    img = torch.from_numpy(BasicDataset.preprocess_input(full_img, org_img, scale_factor))
+    img = torch.from_numpy(BasicDataset.preprocess_input(int_mask, org_img, scale_factor))
 
     img = img.unsqueeze(0)
     img = img.to(device=device, dtype=torch.float32)
@@ -39,7 +39,7 @@ def predict_img(net,
         tf = transforms.Compose(
             [
                 transforms.ToPILImage(),
-                transforms.Resize(full_img.size[1]),
+                transforms.Resize(int_mask.size[1]),
                 transforms.ToTensor()
             ]
         )
@@ -53,11 +53,13 @@ def predict_img(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input dataset',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--model', '-m', default='checkpoints/CP_epoch9.pth',
+    parser.add_argument('--model', '-m', default='checkpoints/CP_epoch6.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--input', '-i',  default='dataset/intermediate_mask_testing/input/', metavar='INPUT', nargs='+',
-                        help='path of input dataset')
+    parser.add_argument('--mask', '-im',  default='dataset/intermediate_mask_training/input/', metavar='INPUT', nargs='+',
+                        help='path of intermediate mask dataset')
+    parser.add_argument('--img', '-img', default='dataset/original_training/', metavar='INPUT', nargs='+',
+                        help='path of original image dataset')
     parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
@@ -96,7 +98,8 @@ def mask_to_image(mask):
 
 if __name__ == "__main__":
     args = get_args()
-    path = args.input
+    int_mask_path = args.mask
+    org_img_path = args.img
     net = FlowUNetwork(n_channels=4, n_classes=1)
 
     logging.info("Loading model {}".format(args.model))
@@ -108,32 +111,32 @@ if __name__ == "__main__":
 
     logging.info("Model loaded !")
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
-    files = sorted(os.listdir(path), key=alphanum_key)
+    mask_files = sorted(os.listdir(int_mask_path), key=alphanum_key)
+    img_files = sorted(os.listdir(org_img_path), key=alphanum_key)
     i = 0
-    dir_org = 'dataset/intermediate_mask_testing/input/'
 
-    while i < len(files):
-        logging.info("\nPredicting image {} ...".format(files[i]))
-        print("\nPredicting image {} ...".format(files[i]))
-        if 'png' in files[i] or 'jpg' in files[i] or 'bmp' in files[i]:
-            img = Image.open(os.path.join(path, files[i]))
-            org_img = Image.open(os.path.join(dir_org, files[i].split('.')[0]+'.png'))
+    while i < len(mask_files):
+        logging.info("\nPredicting image {} ...".format(img_files[i]))
+        print("\nPredicting image {} ...".format(img_files[i]))
+        if 'png' in mask_files[i] or 'jpg' in mask_files[i] or 'bmp' in mask_files[i]:
+            int_mask = Image.open(os.path.join(int_mask_path, mask_files[i]))
+            org_img = Image.open(os.path.join(org_img_path, img_files[i].split('.')[0]+'.jpg'))
 
             mask = predict_img(net=net,
-                               full_img=img,
+                               int_mask=int_mask,
                                org_img=org_img,
                                scale_factor=args.scale,
                                out_threshold=args.mask_threshold,
                                device=device)
 
             if not args.no_save:
-                output_file = args.output + 'output_' + files[i]
+                output_file = args.output + 'output_' + img_files[i]
                 result = mask_to_image(mask)
                 result.save(output_file)
 
                 logging.info("Mask saved to {}".format(output_file))
 
             if not args.no_viz:
-                logging.info("Visualizing results for image {}, close to continue ...".format(files[i]))
-                plot_img_and_mask(img, mask)
+                logging.info("Visualizing results for image {}, close to continue ...".format(img_files[i]))
+                plot_img_and_mask(org_img, mask)
         i += 1
