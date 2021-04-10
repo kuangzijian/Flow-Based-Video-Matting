@@ -23,7 +23,7 @@ dir_checkpoint = 'checkpoints/'
 
 def train_net(net,
               device,
-              epochs=5,
+              epochs=6,
               batch_size=1,
               lr=0.001,
               val_percent=0.1,
@@ -180,7 +180,8 @@ if __name__ == '__main__':
                   img_scale=args.scale,
                   val_percent=args.val / 100)
     except KeyboardInterrupt:
-        torch.save(net.state_dict(), 'INTERRUPTED.pth')
+        torch.save(net.state_dict(),
+                   dir_checkpoint + f'INTERRUPTED.pth')
         logging.info('Saved interrupt')
         try:
             sys.exit(0)
