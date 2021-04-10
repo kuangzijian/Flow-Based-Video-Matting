@@ -126,7 +126,7 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on dataset and target masks',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=10,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=6,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=1,
                         help='Batch size', dest='batchsize')
