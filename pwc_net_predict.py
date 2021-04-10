@@ -323,9 +323,9 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork, sizes):
 
 def run_pwc_from_dir(path):
     if args.testing == False:
-        path = 'dataset/intermediate_mask_training/input/'
+        output_path = 'dataset/intermediate_mask_training/input/'
     else:
-        path = 'dataset/intermediate_mask_testing/input/'
+        output_path = 'dataset/intermediate_mask_testing/input/'
 
     netNetwork = PWCNet().cuda().eval()
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
@@ -346,42 +346,44 @@ def run_pwc_from_dir(path):
         tenFlow = np.array(tenFlow_raw[0].detach().cpu().numpy(), np.float32)
 
         mag = tenFlow[0, :, :]
+        # split the moving object and background using a threshold
+        mag = [[0 if x < args.threshold else 255 for x in y] for y in mag]
         ang = tenFlow[1, :, :]
         hsv = np.zeros((h, w, 3), numpy.float32)
         #hsv[..., 1] = 255
         #hsv[..., 0] = ang * 180 / np.pi / 2
-        hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+        hsv[..., 2] = mag
         if i == 0:
-            hsv[..., 2] = mag
+            #hsv[..., 2] = mag
             rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-            temp = rgb
+            #temp = rgb
 
             # duplicate the first optical flow generated for the first frame
-            cv2.imwrite(path + 'intmask_' + str(1) + '.png', rgb)
-            cv2.imwrite(path + 'intmask_' + str(2) + '.png', rgb)
+            cv2.imwrite(output_path + 'intmask_' + str(1) + '.png', rgb)
+            cv2.imwrite(output_path + 'intmask_' + str(2) + '.png', rgb)
 
         else:
-            hsv[..., 2] = mag
-            rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+            #hsv[..., 2] = mag
+            #rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
             # get warpped using previous rgb and the current rgb
-            warpped = warp(torch.FloatTensor([temp.transpose(2, 0, 1)]).cuda(),
-                           torch.FloatTensor([rgb.transpose(2, 0, 1)]).cuda(), tenFlow_raw)
+            #warpped = softsplat_warp(torch.FloatTensor([temp.transpose(2, 0, 1)]).cuda(),
+            #               torch.FloatTensor([rgb.transpose(2, 0, 1)]).cuda(), tenFlow_raw)
 
             # assign the 0 valued element in magnitude channel with value of warpped
-            for r_index, r in enumerate(mag):
-                for c_index, c in enumerate(r):
-                    if c < args.threshold:
-                        mag[r_index][c_index] = warpped[0][0][r_index][c_index]
-                    else:
-                        mag[r_index][c_index] = 255
-            hsv[..., 2] = mag
+            #for r_index, r in enumerate(mag):
+            #    for c_index, c in enumerate(r):
+            #        if c < args.threshold:
+            #            mag[r_index][c_index] = warpped[0][0][r_index][c_index]
+            #        else:
+            #            mag[r_index][c_index] = 255
+            #hsv[..., 2] = mag
             rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
             temp = rgb
-            cv2.imwrite(path + 'intmask_' + str(i + 2) + '.png', rgb)
+            cv2.imwrite(output_path + 'intmask_' + str(i + 2) + '.png', rgb)
 
         i += 1
 
-def backwarp(tenInput, tenFlow):
+def softsplat_backwarp(tenInput, tenFlow):
     if str(tenFlow.size()) not in backwarp_tenGrid:
         tenHorizontal = torch.linspace(-1.0, 1.0, tenFlow.shape[3]).view(1, 1, 1, tenFlow.shape[3]).expand(
             tenFlow.shape[0], -1, tenFlow.shape[2], -1)
@@ -402,8 +404,8 @@ def backwarp(tenInput, tenFlow):
 
 # end
 
-def warp(tenFirst, tenSecond, tenFlow, fltTime=1):
-    tenMetric = torch.nn.functional.l1_loss(input=tenFirst, target=backwarp(tenInput=tenSecond, tenFlow=tenFlow),
+def softsplat_warp(tenFirst, tenSecond, tenFlow, fltTime=1):
+    tenMetric = torch.nn.functional.l1_loss(input=tenFirst, target=softsplat_backwarp(tenInput=tenSecond, tenFlow=tenFlow),
                                             reduction='none').mean(1, True)
     tenSoftmax = softsplat.FunctionSoftsplat(tenInput=tenFirst, tenFlow=tenFlow * fltTime, tenMetric=-20.0 * tenMetric,
                                              strType='softmax')
