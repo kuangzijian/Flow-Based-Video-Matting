@@ -87,7 +87,7 @@ class BasicDataset(Dataset):
         assert len(org_file) == 1, \
             f'Either no original image or multiple original images found for the ID {idx}: {org_file}'
 
-        mask = Image.open(mask_file[0]).resize(self.size)
+        mask = Image.open(mask_file[0]).resize(self.size).convert('L')
         img = Image.open(int_mask_file[0]).resize(self.size)
         org_img = Image.open(org_file[0]).resize(self.size)
 
