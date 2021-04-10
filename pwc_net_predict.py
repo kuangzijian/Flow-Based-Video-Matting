@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 import os, re
 import argparse
+import softsplat
 
 try:
     from .correlation import correlation  # the custom cost volume layer
@@ -317,11 +318,14 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork, sizes):
     tenSecond = torch.FloatTensor([I2]).cuda()
 
     tenOutput = estimate(tenFirst, tenSecond, netNetwork)
-    flow = np.array(tenOutput[0].detach().cpu().numpy(), np.float32)
 
-    return flow
+    return tenOutput
 
 def run_pwc_from_dir(path):
+    if args.testing == False:
+        output_path = 'dataset/intermediate_mask_training/input/'
+    else:
+        output_path = 'dataset/intermediate_mask_testing/input/'
 
     netNetwork = PWCNet().cuda().eval()
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
@@ -338,31 +342,75 @@ def run_pwc_from_dir(path):
         img2 = os.path.join(path, files[i + 1])
         print("Working on the optical flow between: {} and {}".format(files[i], files[i+1]))
 
-        tenFlow = runPWC(img1, img2, netNetwork, sizes)
+        tenFlow_raw = runPWC(img1, img2, netNetwork, sizes)
+        tenFlow = np.array(tenFlow_raw[0].detach().cpu().numpy(), np.float32)
 
         mag = tenFlow[0, :, :]
         # split the moving object and background using a threshold
         mag = [[0 if x < args.threshold else 255 for x in y] for y in mag]
-        #ang = tenFlow[1, :, :]
+        ang = tenFlow[1, :, :]
         hsv = np.zeros((h, w, 3), numpy.float32)
         #hsv[..., 1] = 255
-        #hsv[..., 0] = cv2.normalize(ang * 180 / np.pi / 2, None, 0, 255, cv2.NORM_MINMAX)
+        #hsv[..., 0] = ang * 180 / np.pi / 2
         hsv[..., 2] = mag
-        rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        if i == 0:
+            #hsv[..., 2] = mag
+            rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+            #temp = rgb
 
-        if args.testing == False:
-            if i == 0:
-                cv2.imwrite('dataset/intermediate_mask_training/input/intmask_' + str(1) + '.png', rgb)
-                cv2.imwrite('dataset/intermediate_mask_training/input/intmask_' + str(2) + '.png', rgb)
-            else:
-                cv2.imwrite('dataset/intermediate_mask_training/input/intmask_' + str(i+2) + '.png', rgb)
+            # duplicate the first optical flow generated for the first frame
+            cv2.imwrite(output_path + 'intmask_' + str(1) + '.png', rgb)
+            cv2.imwrite(output_path + 'intmask_' + str(2) + '.png', rgb)
+
         else:
-            if i == 0:
-                cv2.imwrite('dataset/intermediate_mask_testing/input/intmask_' + str(1) + '.png', rgb)
-                cv2.imwrite('dataset/intermediate_mask_testing/input/intmask_' + str(2) + '.png', rgb)
-            else:
-                cv2.imwrite('dataset/intermediate_mask_testing/input/intmask_' + str(i + 2) + '.png', rgb)
+            #hsv[..., 2] = mag
+            #rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+            # get warpped using previous rgb and the current rgb
+            #warpped = softsplat_warp(torch.FloatTensor([temp.transpose(2, 0, 1)]).cuda(),
+            #               torch.FloatTensor([rgb.transpose(2, 0, 1)]).cuda(), tenFlow_raw)
+
+            # assign the 0 valued element in magnitude channel with value of warpped
+            #for r_index, r in enumerate(mag):
+            #    for c_index, c in enumerate(r):
+            #        if c < args.threshold:
+            #            mag[r_index][c_index] = warpped[0][0][r_index][c_index]
+            #        else:
+            #            mag[r_index][c_index] = 255
+            #hsv[..., 2] = mag
+            rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+            temp = rgb
+            cv2.imwrite(output_path + 'intmask_' + str(i + 2) + '.png', rgb)
+
         i += 1
+
+def softsplat_backwarp(tenInput, tenFlow):
+    if str(tenFlow.size()) not in backwarp_tenGrid:
+        tenHorizontal = torch.linspace(-1.0, 1.0, tenFlow.shape[3]).view(1, 1, 1, tenFlow.shape[3]).expand(
+            tenFlow.shape[0], -1, tenFlow.shape[2], -1)
+        tenVertical = torch.linspace(-1.0, 1.0, tenFlow.shape[2]).view(1, 1, tenFlow.shape[2], 1).expand(
+            tenFlow.shape[0], -1, -1, tenFlow.shape[3])
+
+        backwarp_tenGrid[str(tenFlow.size())] = torch.cat([tenHorizontal, tenVertical], 1).cuda()
+
+    tenFlow = torch.cat([tenFlow[:, 0:1, :, :] / ((tenInput.shape[3] - 1.0) / 2.0),
+                         tenFlow[:, 1:2, :, :] / ((tenInput.shape[2] - 1.0) / 2.0)], 1)
+    # print(tenFlow.shape)
+    # print(backwarp_tenGrid[str(tenFlow.size())].shape )
+
+    return torch.nn.functional.grid_sample(input=tenInput,
+                                           grid=(backwarp_tenGrid[str(tenFlow.size())] + tenFlow).permute(0, 2, 3, 1),
+                                           mode='bilinear', padding_mode='zeros', align_corners=True)
+
+
+# end
+
+def softsplat_warp(tenFirst, tenSecond, tenFlow, fltTime=1):
+    tenMetric = torch.nn.functional.l1_loss(input=tenFirst, target=softsplat_backwarp(tenInput=tenSecond, tenFlow=tenFlow),
+                                            reduction='none').mean(1, True)
+    tenSoftmax = softsplat.FunctionSoftsplat(tenInput=tenFirst, tenFlow=tenFlow * fltTime, tenMetric=-20.0 * tenMetric,
+                                             strType='softmax')
+
+    return tenSoftmax
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
