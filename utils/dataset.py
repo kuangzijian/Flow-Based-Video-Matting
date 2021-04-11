@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import Dataset
 import logging, os, re
 from PIL import Image
-
+from pwc_net_predict import estimate_optical_flow
 
 class BasicDataset(Dataset):
     def __init__(self, masks_dir, org_dir, scale=1, mask_suffix=''):
@@ -20,6 +20,8 @@ class BasicDataset(Dataset):
         alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
         files = sorted(os.listdir(org_dir), key=alphanum_key)
         sizes = [Image.open(os.path.join(org_dir, f), 'r').size for f in files]
+        int_masks = estimate_optical_flow(org_dir, 0.5)
+        self.int_masks = int_masks
         self.size = max(sizes)
 
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
@@ -82,8 +84,8 @@ class BasicDataset(Dataset):
 
         mask = Image.open(mask_file[0]).resize(self.size).convert('L')
         org_img = Image.open(org_file[0]).resize(self.size)
-
-        img = self.preprocess(org_img, self.scale)
+        int_mask = self.int_masks[int(idx) - 1]
+        img = self.preprocess_input_with_int_mask(int_mask, org_img, self.scale)
         mask = self.preprocess(mask, self.scale)
 
         return {
