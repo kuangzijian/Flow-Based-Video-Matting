@@ -371,6 +371,39 @@ def run_pwc_from_dir(path):
             cv2.imwrite(output_path + 'intmask_' + str(i + 2) + '.png', rgb)
         i += 1
 
+def estimate_optical_flow(org_img_path, mask_threshold = 0.5):
+    print("Estimating optical flows for all input imgs...")
+    alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
+    img_files = sorted(os.listdir(org_img_path), key=alphanum_key)
+    pwcNetwork = PWCNet().cuda().eval().to(device=torch.device('cuda:1'))
+    int_masks = []
+    for i in range(len(img_files)):
+        if 'png' in img_files[i] or 'jpg' in img_files[i] or 'bmp' in img_files[i]:
+            org_img = PIL.Image.open(os.path.join(org_img_path, img_files[i].split('.')[0] + '.jpg'))
+            if i == 0:
+                # for the first frame, since there is no previous frame, we estimate the optical flow using it self
+                previous_img = img = os.path.join(org_img_path, img_files[i])
+            else:
+                # we estimate the optical flow for each two frames
+                previous_img = os.path.join(org_img_path, img_files[i - 1])
+                img = os.path.join(org_img_path, img_files[i])
+
+            # estimate the optical flow
+            tenFlow_raw = runPWC(previous_img, img, pwcNetwork, org_img.size)
+            tenFlow = np.array(tenFlow_raw[0].detach().cpu().numpy(), np.float32)
+            w, h = org_img.size
+            mag = tenFlow[0, :, :]
+
+            # split the moving object and background using a mask threshold
+            mag = [[0 if x < mask_threshold else 255 for x in y] for y in mag]
+            hsv = np.zeros((h, w, 3), numpy.float32)
+            hsv[..., 2] = mag
+            int_mask = cv2.cvtColor(hsv, cv2.COLOR_BGR2RGB)
+            int_mask = PIL.Image.fromarray(np.uint8(int_mask))
+        int_masks.append(int_mask)
+
+    return int_masks
+
 def softsplat_backwarp(tenInput, tenFlow):
     if str(tenFlow.size()) not in backwarp_tenGrid:
         tenHorizontal = torch.linspace(-1.0, 1.0, tenFlow.shape[3]).view(1, 1, 1, tenFlow.shape[3]).expand(
