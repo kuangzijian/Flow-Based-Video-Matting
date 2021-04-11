@@ -84,8 +84,8 @@ class BasicDataset(Dataset):
 
         mask = Image.open(mask_file[0]).resize(self.size).convert('L')
         org_img = Image.open(org_file[0]).resize(self.size)
-
-        img = self.preprocess(org_img, self.scale)
+        int_mask = self.int_masks[int(idx) - 1]
+        img = self.preprocess_input_with_int_mask(int_mask, org_img, self.scale)
         mask = self.preprocess(mask, self.scale)
 
         return {

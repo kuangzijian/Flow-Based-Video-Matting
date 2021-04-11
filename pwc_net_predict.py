@@ -375,7 +375,7 @@ def estimate_optical_flow(org_img_path, mask_threshold = 0.5):
     print("Estimating optical flows for all input imgs...")
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
     img_files = sorted(os.listdir(org_img_path), key=alphanum_key)
-    pwcNetwork = PWCNet().cuda().eval().to(device=torch.device('cuda:1'))
+    pwcNetwork = PWCNet().cuda().eval()
     int_masks = []
     for i in range(len(img_files)):
         if 'png' in img_files[i] or 'jpg' in img_files[i] or 'bmp' in img_files[i]:
@@ -398,7 +398,7 @@ def estimate_optical_flow(org_img_path, mask_threshold = 0.5):
             mag = [[0 if x < mask_threshold else 255 for x in y] for y in mag]
             hsv = np.zeros((h, w, 3), numpy.float32)
             hsv[..., 2] = mag
-            int_mask = cv2.cvtColor(hsv, cv2.COLOR_BGR2RGB)
+            int_mask = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
             int_mask = PIL.Image.fromarray(np.uint8(int_mask))
         int_masks.append(int_mask)
 
