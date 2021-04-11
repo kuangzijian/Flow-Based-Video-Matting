@@ -15,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 
-dir_mask = 'dataset/intermediate_mask_training/groudtruth/'
+dir_mask = 'dataset/ground_truth_training/'
 dir_org = 'dataset/original_training/'
 dir_checkpoint = 'checkpoints/'
 
@@ -137,14 +137,16 @@ def get_args():
                         help='Downscaling factor of the dataset')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=20.0,
                         help='Percent of the data that is used as validation (0-100)')
+    parser.add_argument('-g', '--gpu', type=str, default='0',
+                        help='Set the gpu for cuda')
 
     return parser.parse_args()
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"] = '1'
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     args = get_args()
+    os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(args.gpu.split(','))
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
 

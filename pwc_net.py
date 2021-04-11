@@ -313,9 +313,9 @@ def runPWC(arguments_strFirst, arguments_strSecond, netNetwork, sizes):
 
 def run_pwc_from_dir(path):
     if args.testing == False:
-        output_path = 'dataset/intermediate_mask_training/input/'
+        output_path = 'dataset/intermediate_mask_training/'
     else:
-        output_path = 'dataset/intermediate_mask_testing/input/'
+        output_path = 'dataset/intermediate_mask_testing/'
 
     netNetwork = PWCNet().cuda().eval()
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]

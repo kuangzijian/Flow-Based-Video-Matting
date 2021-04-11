@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import Dataset
 import logging, os, re
 from PIL import Image
-from pwc_net_predict import estimate_optical_flow
+from pwc_net import estimate_optical_flow
 
 class BasicDataset(Dataset):
     def __init__(self, masks_dir, org_dir, scale=1, mask_suffix=''):

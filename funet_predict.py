@@ -13,7 +13,7 @@ from torchvision import transforms
 from model import FlowUNetwork
 from utils.data_vis import plot_img_and_mask
 from utils.dataset import BasicDataset
-from pwc_net_predict import runPWC, PWCNet
+from pwc_net import runPWC, PWCNet
 from dataset_generator import DatasetGenerator
 
 def predict_img(net,
@@ -61,7 +61,7 @@ def get_args():
                         help="Specify the file in which the model is stored")
     parser.add_argument('--img', '-img', default='dataset/original_testing/', metavar='INPUT', nargs='+',
                         help='path of original image dataset')
-    parser.add_argument('--output', '-o', default='dataset/mask_ouput/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
