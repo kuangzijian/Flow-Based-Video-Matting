@@ -381,9 +381,11 @@ def estimate_optical_flow(org_img_path, mask_threshold = 0.5):
         if 'png' in img_files[i] or 'jpg' in img_files[i] or 'bmp' in img_files[i]:
             org_img = PIL.Image.open(os.path.join(org_img_path, img_files[i].split('.')[0] + '.jpg'))
             if i == 0:
+                print("Working on the optical flow between: {} and {}".format(img_files[i], img_files[i]))
                 # for the first frame, since there is no previous frame, we estimate the optical flow using it self
                 previous_img = img = os.path.join(org_img_path, img_files[i])
             else:
+                print("Working on the optical flow between: {} and {}".format(img_files[i - 1], img_files[i]))
                 # we estimate the optical flow for each two frames
                 previous_img = os.path.join(org_img_path, img_files[i - 1])
                 img = os.path.join(org_img_path, img_files[i])
