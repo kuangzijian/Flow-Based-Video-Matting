@@ -14,6 +14,7 @@ from model import FlowUNetwork
 from utils.data_vis import plot_img_and_mask
 from utils.dataset import BasicDataset
 from pwc_net_predict import runPWC, PWCNet
+from dataset_generator import DatasetGenerator
 
 def predict_img(net,
                 int_mask,
@@ -58,9 +59,9 @@ def get_args():
     parser.add_argument('--model', '-m', default='checkpoints/CP_epoch6.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--img', '-img', default='dataset/original_training/', metavar='INPUT', nargs='+',
+    parser.add_argument('--img', '-img', default='dataset/original_testing/', metavar='INPUT', nargs='+',
                         help='path of original image dataset')
-    parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/mask_ouput/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
@@ -74,6 +75,8 @@ def get_args():
     parser.add_argument('--scale', '-s', type=float,
                         help="Scale factor for the input dataset",
                         default=1)
+    parser.add_argument('-g', '--gpu', type=str, default='0',
+                        help='Set the gpu for cuda')
 
     return parser.parse_args()
 
@@ -103,6 +106,8 @@ if __name__ == "__main__":
 
     logging.info("Loading model {}".format(args.model))
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(args.gpu.split(','))
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
     net.to(device=device)
@@ -114,6 +119,8 @@ if __name__ == "__main__":
     img_files = sorted(os.listdir(org_img_path), key=alphanum_key)
     i = 0
     pwcNetwork = PWCNet().cuda().eval()
+
+    datasetGenerator = DatasetGenerator(src_dir=org_img_path)
     while i < len(img_files):
         logging.info("\nPredicting image {} ...".format(img_files[i]))
         print("\nPredicting image {} ...".format(img_files[i]))
@@ -153,11 +160,14 @@ if __name__ == "__main__":
                 result = mask_to_image(mask)
                 result.save(output_file)
 
+                # replace background based on mask and provided bg
+                new_img = datasetGenerator.replace_background(img_files[i], mask)
+                cv2.imwrite(args.output + 'new_' + img_files[i], new_img)
+
                 logging.info("Mask saved to {}".format(output_file))
 
             if not args.no_viz:
                 logging.info("Visualizing results for image {}, close to continue ...".format(img_files[i]))
-                plot_img_and_mask(org_img, mask)
-                # todo: replace background based on mask and provided bg.
-                # todo: using openCV to display original image, predicted mask and new image with replaced bg.
+                plot_img_and_mask(org_img, mask, new_img)
+
         i += 1

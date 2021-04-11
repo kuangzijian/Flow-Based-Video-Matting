@@ -1,19 +1,18 @@
 import cv2
 import numpy as np
-import re
+import re, os
 
 class DatasetGenerator():
-    def __init__(self, seq, src_dir = 'dataset/video_matting_dataset/frames/',
+    def __init__(self, seq = 4,
+                        src_dir = 'dataset/video_matting_dataset/frames/',
                         bg_dir = 'dataset/background/',
                         gt_dir = 'dataset/video_matting_dataset/ground_truth/',
-                        pred_mask_dir = 'dataset/intermediate_mask_testing/input/',
-                        output_dir = 'dataset/original_testing/'):
+                        output_dir = 'dataset/mask_ouput/'):
         self.src_dir = src_dir  # Original image with green background
         self.bg_dir = bg_dir    # Background image
         self.gt_dir = gt_dir    # Mask image needed to replace the background
-        self.pred_mask_dir = pred_mask_dir  # Predicted masks by the model
         self.output_dir = output_dir    # Directory to save the newly generated image
-        self.seq = seq
+        self.seq = str(seq)
 
     def extract_frames_and_ground_truth(self, seq):
         # extract frames from video
@@ -46,13 +45,9 @@ class DatasetGenerator():
 
             cv2.imwrite(self.gt_dir + 'gt{}_{}.jpg'.format(seq, i+1), 255 - (255 * mask))
 
-    def replace_background(self, original_img, ground_truth, background_img):
+    def replace_background(self, original_img, mask):
         # replace background for a single image
-        idx = re.split('_', original_img)[1].split('.')[0]
-        kernel = np.ones((5, 5), np.uint8)
-        opening = cv2.morphologyEx(ground_truth, cv2.MORPH_CLOSE, kernel)
-        background_img[np.where(opening == 255)] = original_img[np.where(opening == 255)]
-
-        print("Replacing the background for original_{}.jpg".format(idx))
-
-        cv2.imwrite(self.output_dir + 'original_{}.jpg'.format(idx), background_img)
+        background_img = cv2.imread(os.path.join(self.bg_dir, self.seq+'.jpg'))
+        original_img = cv2.imread(os.path.join(self.src_dir, original_img))
+        background_img[np.where(mask == True)] = original_img[np.where(mask == True)]
+        return background_img
