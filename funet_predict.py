@@ -7,6 +7,7 @@ import torch
 import torch.nn.functional as F
 import numpy
 import cv2
+import matplotlib.pyplot as plt
 from PIL import Image
 from torchvision import transforms
 
@@ -107,6 +108,11 @@ if __name__ == "__main__":
     pwcNetwork = PWCNet().cuda().eval()
 
     datasetGenerator = DatasetGenerator(src_dir=org_img_path)
+    if not args.no_viz:
+        plt.ion()
+        fig, ax = plt.subplots(1, 3, figsize=(12,3))
+        plt.show()
+
     while i < len(img_files):
         logging.info("\nPredicting image {} ...".format(img_files[i]))
         print("\nPredicting image {} ...".format(img_files[i]))
@@ -154,6 +160,6 @@ if __name__ == "__main__":
 
             if not args.no_viz:
                 logging.info("Visualizing results for image {}, close to continue ...".format(img_files[i]))
-                plot_img_and_mask(org_img, mask, new_img)
+                plot_img_and_mask(plt, ax, org_img, mask, new_img, i+1)
 
         i += 1
