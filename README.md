@@ -26,9 +26,9 @@ table.html
 $ pip install -r requirements.txt
 ```
 
-## Configure and Run
+## Dataset
 
-All configurations concerning data, model, training, visualization etc. can be made in _config.py_. The default configuration will run a training with paper-given parameters on the provided dummy dataset. This dataset contains images of 4 squares as normal examples and 4 circles as anomaly.
+We created our own video matting dataset. The dataset includes four online conference style green screen videos. We extracted the data from video and generated ground truth mask for each character, and then we applied virtual background to the frames as our training/testing dataset. You can download the dataset from <a href="https://drive.google.com/file/d/1HGUDS7oaYbBAJHfsQJBhc-r-9kRhh2cs/view?usp=sharing" rel="dataset"> this link <a/>.
 
 If you encounter GPU Out of Memory issue, you can reduce the neuron numbers in _config.py_
 ```
@@ -42,7 +42,7 @@ Please report us if you have issues when using the code.
 $ python main.py
 ```
 
-## Data
+## Configure and Run the Code
 How to use Data extraction tool to extract data from video clips:
  1. Create folder structure like the example shows in the picture below.
  
