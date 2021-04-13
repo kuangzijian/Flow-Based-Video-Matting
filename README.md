@@ -88,6 +88,8 @@ optional arguments:
                         Scale factor for the input images (default: 1)
 ``` 
 
+## Credits
+We want to thank the work of the [pythorch-pwc](https://github.com/sniklaus/pytorch-pwc) that implemented by sniklaus, we have used the pytorch-pwc to estimate optical flow in our project.
 
 ## Citation
 ```
