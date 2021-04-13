@@ -10,7 +10,7 @@ import cv2
 import matplotlib.pyplot as plt
 from PIL import Image
 from torchvision import transforms
-
+from dice_loss import dice_coeff
 from model import FlowUNetwork
 from utils.data_vis import plot_img_and_mask
 from utils.dataset import BasicDataset
@@ -51,7 +51,7 @@ def predict_img(net,
         probs = tf(probs.cpu())
         full_mask = probs.squeeze().cpu().numpy()
 
-    return full_mask > out_threshold
+    return full_mask, full_mask > out_threshold
 
 
 def get_args():
@@ -62,6 +62,8 @@ def get_args():
                         help="Specify the file in which the model is stored")
     parser.add_argument('--img', '-img', default='dataset/original_training/', metavar='INPUT', nargs='+',
                         help='path of original image dataset')
+    parser.add_argument('--mask', '-mask', default='dataset/ground_truth_training/', metavar='INPUT', nargs='+',
+                        help='path of ground truth mask dataset')
     parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
@@ -89,6 +91,7 @@ def mask_to_image(mask):
 if __name__ == "__main__":
     args = get_args()
     org_img_path = args.img
+    gt_mask_path = args.mask
     net = FlowUNetwork(n_channels=4, n_classes=1)
 
     logging.info("Loading model {}".format(args.model))
@@ -104,6 +107,7 @@ if __name__ == "__main__":
     print("Model loaded !")
     alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
     img_files = sorted(os.listdir(org_img_path), key=alphanum_key)
+    true_masks = sorted(os.listdir(gt_mask_path), key=alphanum_key)
     i = 0
     pwcNetwork = PWCNet().cuda().eval()
 
@@ -113,7 +117,9 @@ if __name__ == "__main__":
         fig, ax = plt.subplots(2, 2, figsize=(8, 4))
         plt.show()
 
+    tot = 0
     while i < len(img_files):
+        true_mask = Image.open(os.path.join(gt_mask_path, true_masks[i].split('.')[0] + '.jpg')).convert('L')
         logging.info("\nPredicting image {} ...".format(img_files[i]))
         print("\nPredicting image {} ...".format(img_files[i]))
         if 'png' in img_files[i] or 'jpg' in img_files[i] or 'bmp' in img_files[i]:
@@ -140,12 +146,22 @@ if __name__ == "__main__":
             int_mask = Image.fromarray(np.uint8(int_mask))
 
             # predict mask using flowUNet
-            mask = predict_img(net=net,
+            mask_pred, mask = predict_img(net=net,
                                int_mask=int_mask,
                                org_img=org_img,
                                scale_factor=args.scale,
                                out_threshold=args.mask_threshold,
                                device=device)
+            mask_pred = torch.from_numpy(mask_pred).type(torch.FloatTensor)
+            mask_pred = mask_pred.to(device=device, dtype=torch.float32)
+            pred = torch.sigmoid(mask_pred)
+            pred = (pred > 0.5).float()
+            true_mask = BasicDataset.preprocess(true_mask, 1)
+            true_mask = torch.from_numpy(true_mask).type(torch.FloatTensor)
+            true_mask = true_mask.to(device=device, dtype=torch.float32)
+            dc = dice_coeff(pred.unsqueeze(0).unsqueeze(0), true_mask.unsqueeze(0)).item()
+            tot += dc
+            print("Dice Coefficient: " + str(dc))
 
             if not args.no_save:
                 output_file = args.output + 'output_' + img_files[i]
@@ -164,3 +180,5 @@ if __name__ == "__main__":
                 plot_img_and_mask(plt, ax, org_img, mask, removed_bg, new_img)
 
         i += 1
+
+    print('Averaging Dice Coefficient on ' + str(len(img_files)) + ' testing frames: ' + str(tot/len(img_files)))
