@@ -102,18 +102,18 @@ optional arguments:
 ```
 [2]  @misc{pytorch-pwc,
          author = {Simon Niklaus},
-         title = {U-Net: Convolutional Networks for Biomedical Image Segmentation},
-         year = {2015},
-         howpublished = {\url{https://arxiv.org/abs/1505.04597}}
+         title = {A Reimplementation of {PWC-Net} Using {PyTorch}},
+         year = {2018},
+         howpublished = {\url{https://github.com/sniklaus/pytorch-pwc}}
     }
 ``` 
 
 ```
 [3]  @misc{U-Net,
          author = {Olaf Ronneberger, Philipp Fischer, Thomas Brox},
-         title = {A Reimplementation of {PWC-Net} Using {PyTorch}},
-         year = {2018},
-         howpublished = {\url{https://github.com/sniklaus/pytorch-pwc}}
+         title = {U-Net: Convolutional Networks for Biomedical Image Segmentation},
+         year = {2015},
+         howpublished = {\url{https://arxiv.org/abs/1505.04597}}
     }
 ```  
 
