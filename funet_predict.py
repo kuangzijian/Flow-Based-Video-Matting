@@ -60,7 +60,7 @@ def get_args():
     parser.add_argument('--model', '-m', default='checkpoints/CP_epoch6.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--img', '-img', default='dataset/original_testing/', metavar='INPUT', nargs='+',
+    parser.add_argument('--img', '-img', default='dataset/original_training/', metavar='INPUT', nargs='+',
                         help='path of original image dataset')
     parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     datasetGenerator = DatasetGenerator(src_dir=org_img_path)
     if not args.no_viz:
         plt.ion()
-        fig, ax = plt.subplots(1, 3, figsize=(12,3))
+        fig, ax = plt.subplots(2, 2, figsize=(8, 4))
         plt.show()
 
     while i < len(img_files):
@@ -153,6 +153,7 @@ if __name__ == "__main__":
                 result.save(output_file)
 
                 # replace background based on mask and provided bg
+                removed_bg = datasetGenerator.apply_mask(img_files[i], mask)
                 new_img = datasetGenerator.replace_background(img_files[i], mask)
                 cv2.imwrite(args.output + 'new_' + img_files[i], new_img)
 
@@ -160,6 +161,6 @@ if __name__ == "__main__":
 
             if not args.no_viz:
                 logging.info("Visualizing results for image {}, close to continue ...".format(img_files[i]))
-                plot_img_and_mask(plt, ax, org_img, mask, new_img, i+1)
+                plot_img_and_mask(plt, ax, org_img, mask, removed_bg, new_img)
 
         i += 1

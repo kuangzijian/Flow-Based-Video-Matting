@@ -51,3 +51,9 @@ class DatasetGenerator():
         original_img = cv2.imread(os.path.join(self.src_dir, original_img))
         background_img[np.where(mask == True)] = original_img[np.where(mask == True)]
         return background_img
+
+    def apply_mask(self, img, mask):
+        # apply mask to each frame to remove green screen background
+        img = cv2.imread(os.path.join(self.src_dir, img))
+        img[np.where(mask == False)] = 255
+        return img
