@@ -19,4 +19,4 @@ def plot_img_and_mask(plt, ax, img, mask, removed_bg, img_new_bg):
         for aa in a:
             aa.set_xticks([])
             aa.set_yticks([])
-    plt.pause(0.001)
+    plt.pause(0.0001)

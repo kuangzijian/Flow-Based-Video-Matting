@@ -60,9 +60,9 @@ def get_args():
     parser.add_argument('--model', '-m', default='checkpoints/CP_epoch6.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--img', '-img', default='dataset/original_training/', metavar='INPUT', nargs='+',
+    parser.add_argument('--img', '-img', default='dataset/seq4/', metavar='INPUT', nargs='+',
                         help='path of original image dataset')
-    parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/mask_output_seq4/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         logging.info("\nPredicting image {} ...".format(img_files[i]))
         print("\nPredicting image {} ...".format(img_files[i]))
         if 'png' in img_files[i] or 'jpg' in img_files[i] or 'bmp' in img_files[i]:
-            org_img = Image.open(os.path.join(org_img_path, img_files[i].split('.')[0] + '.jpg'))
+            org_img = Image.open(os.path.join(org_img_path, img_files[i]))
             if i == 0:
                 # for the first frame, since there is no previous frame, we estimate the optical flow using it self
                 previous_img = img = os.path.join(org_img_path, img_files[i])
@@ -158,6 +158,8 @@ if __name__ == "__main__":
                 cv2.imwrite(args.output + 'new_' + img_files[i], new_img)
 
                 logging.info("Mask saved to {}".format(output_file))
+
+                # plt.savefig(args.output + 'new_{}.jpg'.format(i+1))
 
             if not args.no_viz:
                 logging.info("Visualizing results for image {}, close to continue ...".format(img_files[i]))
