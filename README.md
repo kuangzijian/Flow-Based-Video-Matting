@@ -1,40 +1,96 @@
-# pytorch-pwc
-This is a personal reimplementation of PWC-Net [1] using PyTorch. Should you be making use of this work, please cite the paper accordingly. Also, make sure to adhere to the <a href="https://github.com/NVlabs/PWC-Net#license">licensing terms</a> of the authors. Should you be making use of this particular implementation, please acknowledge it appropriately [2].
+# Flow-based-Video-Matting-Algorithm
 
-<a href="https://arxiv.org/abs/1709.02371" rel="Paper"><img src="http://www.arxiv-sanity.com/static/thumbs/1709.02371v1.pdf.jpg" alt="Paper" width="100%"></a>
+This is the repository to the paper "Flow based video matting" by Zijian Kuang and Xinran Tie.
+We proposed to use optical flow and UNet to generate a refined mask for video matting purpose.
 
-For the original version of this work, please see: https://github.com/NVlabs/PWC-Net
-<br />
-Another optical flow implementation from me: https://github.com/sniklaus/pytorch-liteflownet
-<br />
-And another optical flow implementation from me: https://github.com/sniklaus/pytorch-unflow
-<br />
-Yet another optical flow implementation from me: https://github.com/sniklaus/pytorch-spynet
+<a href="https://arxiv.org/abs/1709.02371" rel="Paper"><img src="https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/network.png" alt="Paper" width="100%"></a>
 
-## background
-The authors of PWC-Net are thankfully already providing a reference implementation in PyTorch. However, its initial version did not reach the performance of the original Caffe version. This is why I created this repositroy, in which I replicated the performance of the official Caffe version by utilizing its weights.
+## Getting Started
 
-The official PyTorch implementation has adopted my approach of using the Caffe weights since then, which is why they are all performing equally well now. Many people have reported issues with CUDA when trying to get the official PyTorch version to run though, while my reimplementaiton does not seem to be subject to such problems.
+You will need [Python 3.6](https://www.python.org/downloads) and the packages specified in _requirements.txt_.
+We recommend setting up a [virtual environment with pip](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
+and installing the packages there.
+The correlation layer is implemented in CUDA using CuPy, which is why CuPy is a required dependency. It can be installed using pip install cupy or alternatively using one of the provided binary packages as outlined in the CuPy repository.
 
-## setup
-The correlation layer is implemented in CUDA using CuPy, which is why CuPy is a required dependency. It can be installed using `pip install cupy` or alternatively using one of the provided [binary packages](https://docs.cupy.dev/en/stable/install.html#installing-cupy) as outlined in the CuPy repository.
-
-## usage
-To run it on your own pair of images, use the following command. You can choose between two models, please make sure to see their paper / the code for more details.
+Install packages with:
 
 ```
-python run.py --model default --first ./images/first.png --second ./images/second.png --out ./out.flo
+$ pip install -r requirements.txt
 ```
 
-I am afraid that I cannot guarantee that this reimplementation is correct. However, it produced results identical to the Caffe implementation of the original authors in the examples that I tried. Please feel free to contribute to this repository by submitting issues and pull requests.
+Or install with for Windows as per [PyTorch official site](https://pytorch.org/get-started/locally/):
 
-## comparison
-<p align="center"><img src="comparison/comparison.gif?raw=true" alt="Comparison"></p>
+```
+$ pip install torch===1.6.0 torchvision===0.7.0 -f https://download.pytorch.org/whl/torch_stable.html
+$ pip install -r requirements.txt
+```
 
-## license
-As stated in the <a href="https://github.com/NVlabs/PWC-Net#license">licensing terms</a> of the authors of the paper, the models are free for non-commercial share-alike purpose. Please make sure to further consult their licensing terms.
+## Dataset
 
-## references
+We created our own video matting dataset. The dataset includes four online conference style green screen videos. We extracted the data from video and generated ground truth mask for each character, and then we applied virtual background to the frames as our training/testing dataset. You can download the dataset from <a href="https://drive.google.com/file/d/1HGUDS7oaYbBAJHfsQJBhc-r-9kRhh2cs/view?usp=sharing" rel="dataset"> this link <a/>. The data examples are shown as below:
+
+ Input image 1:![1](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/with_bg.jpg) | Input image 2: ![2](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/with_bg2.jpg)
+:-------------------------:|:-------------------------:
+Ground truth 1:![3](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/ground_truth.jpg) | Ground truth 2:![4](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/ground_truth2.jpg)
+
+To use our code to generate more video matting data and groudtruth, you can use the functions in _dataset_generator.py_
+
+
+## Configure and Run the Code
+To train our model: 
+ 1. Create folder structure like the example shows in the picture below, and then dump the training data into the _original_training_ folder, and dump the ground truth data into the _ground_truth_training_ folder:
+ 
+  ![1](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/dataset_structure.png)
+  
+ 2. Run the training code:
+
+``` 
+python funet_train.py
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e E, --epochs E      Number of epochs (default: 6)
+  -b [B], --batch-size [B]
+                        Batch size (default: 1)
+  -l [LR], --learning-rate [LR]
+                        Learning rate (default: 0.1)
+  -f LOAD, --load LOAD  Load model from a .pth file (default: False)
+  -s SCALE, --scale SCALE
+                        Downscaling factor of the images (default: 1)
+  -v VAL, --validation VAL
+                        Percent of the data that is used as validation (0-100)
+                        (default: 20.0)
+``` 
+To predict using our model:
+ 1. Dump the testing data into the _original_testing_ folder, and dump the ground truth data into the _ground_truth_testing_ folder.
+ 2. Run the predicting code:
+
+``` 
+python funet_predict.py
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --model FILE, -m FILE
+                        Specify the file in which the model is stored
+                        (default: MODEL.pth)
+  --input INPUT [INPUT ...], -i INPUT [INPUT ...]
+                        filenames of input images (default: None)
+  --output INPUT [INPUT ...], -o INPUT [INPUT ...]
+                        Filenames of ouput images (default: None)
+  --viz, -v             Visualize the images as they are processed (default:
+                        False)
+  --no-save, -n         Do not save the output masks (default: False)
+  --mask-threshold MASK_THRESHOLD, -t MASK_THRESHOLD
+                        Minimum probability value to consider a mask pixel
+                        white (default: 0.5)
+  --scale SCALE, -s SCALE
+                        Scale factor for the input images (default: 1)
+``` 
+
+## Credits
+We want to thank the work of the [pythorch-pwc](https://github.com/sniklaus/pytorch-pwc) that implemented by sniklaus, we have used the pytorch-pwc to estimate optical flow in our project.
+
+## Citation
 ```
 [1]  @inproceedings{Sun_CVPR_2018,
          author = {Deqing Sun and Xiaodong Yang and Ming-Yu Liu and Jan Kautz},
@@ -51,4 +107,17 @@ As stated in the <a href="https://github.com/NVlabs/PWC-Net#license">licensing t
          year = {2018},
          howpublished = {\url{https://github.com/sniklaus/pytorch-pwc}}
     }
+``` 
+
 ```
+[3]  @misc{U-Net,
+         author = {Olaf Ronneberger, Philipp Fischer, Thomas Brox},
+         title = {U-Net: Convolutional Networks for Biomedical Image Segmentation},
+         year = {2015},
+         howpublished = {\url{https://arxiv.org/abs/1505.04597}}
+    }
+```  
+
+## License
+
+This project is licensed under the MIT License.
