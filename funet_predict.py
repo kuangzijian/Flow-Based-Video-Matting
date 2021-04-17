@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import numpy
 import cv2
 import matplotlib.pyplot as plt
+import time
 from PIL import Image
 from torchvision import transforms
 from dice_loss import dice_coeff
@@ -60,17 +61,20 @@ def get_args():
     parser.add_argument('--model', '-m', default='checkpoints/CP_epoch6.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--img', '-img', default='dataset/original_testing/', metavar='INPUT', nargs='+',
+    parser.add_argument('--img', '-img', default='dataset/test2/', metavar='INPUT', nargs='+',
                         help='path of original image dataset')
-    parser.add_argument('--mask', '-mask', default='dataset/ground_truth_testing/', metavar='INPUT', nargs='+',
+    parser.add_argument('--mask', '-mask', default='dataset/ground_truth_testing2/', metavar='INPUT', nargs='+',
                         help='path of ground truth mask dataset')
-    parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/mask_output3/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
                         default=False)
     parser.add_argument('--no-save', '-n', action='store_true',
                         help="Do not save the output masks",
+                        default=False)
+    parser.add_argument('--no-eval', '-e', action='store_true',
+                        help="Do not evaluate.",
                         default=False)
     parser.add_argument('--mask-threshold', '-t', type=float,
                         help="Minimum probability value to consider a mask pixel white",
@@ -118,12 +122,13 @@ if __name__ == "__main__":
         plt.show()
 
     tot = 0
+    total_time = 0
     while i < len(img_files):
-        true_mask = Image.open(os.path.join(gt_mask_path, true_masks[i].split('.')[0] + '.jpg')).convert('L')
-        logging.info("\nPredicting image {} ...".format(img_files[i]))
+        start_time = time.time()
+        true_mask = Image.open(os.path.join(gt_mask_path, true_masks[i])).convert('L')
         print("\nPredicting image {} ...".format(img_files[i]))
         if 'png' in img_files[i] or 'jpg' in img_files[i] or 'bmp' in img_files[i]:
-            org_img = Image.open(os.path.join(org_img_path, img_files[i].split('.')[0] + '.jpg'))
+            org_img = Image.open(os.path.join(org_img_path, img_files[i]))
             if i == 0:
                 # for the first frame, since there is no previous frame, we estimate the optical flow using it self
                 previous_img = img = os.path.join(org_img_path, img_files[i])
@@ -159,9 +164,16 @@ if __name__ == "__main__":
             true_mask = BasicDataset.preprocess(true_mask, 1)
             true_mask = torch.from_numpy(true_mask).type(torch.FloatTensor)
             true_mask = true_mask.to(device=device, dtype=torch.float32)
-            dc = dice_coeff(pred.unsqueeze(0).unsqueeze(0), true_mask.unsqueeze(0)).item()
-            tot += dc
-            print("Dice Coefficient: " + str(dc))
+
+            end_time = time.time()
+            total_time += end_time - start_time
+
+            print("Time taking for predicting:", str(end_time-start_time))
+
+            if not args.no_eval:
+                dc = dice_coeff(pred.unsqueeze(0).unsqueeze(0), true_mask.unsqueeze(0)).item()
+                tot += dc
+                print("Dice Coefficient: " + str(dc))
 
             if not args.no_save:
                 output_file = args.output + 'output_' + img_files[i]
@@ -178,7 +190,9 @@ if __name__ == "__main__":
             if not args.no_viz:
                 logging.info("Visualizing results for image {}, close to continue ...".format(img_files[i]))
                 plot_img_and_mask(plt, ax, org_img, mask, removed_bg, new_img)
+                # plt.savefig(args.output + 'new_{}.jpg'.format(i + 1))
 
         i += 1
 
     print('Averaging Dice Coefficient on ' + str(len(img_files)) + ' testing frames: ' + str(tot/len(img_files)))
+    print("Total execution time:", str(total_time))
