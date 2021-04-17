@@ -15,8 +15,8 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 
-dir_mask = 'dataset/ground_truth_training/'
-dir_org = 'dataset/original_training/'
+dir_mask = 'dataset/train_dataset/ground_truth/'
+dir_org = 'dataset/train_dataset/train/'
 dir_checkpoint = 'checkpoints/'
 
 

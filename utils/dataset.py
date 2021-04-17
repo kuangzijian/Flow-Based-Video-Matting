@@ -14,10 +14,10 @@ class BasicDataset(Dataset):
         self.org_dir = org_dir
         self.scale = scale
         self.mask_suffix = mask_suffix
-        self.org_prefix = 'original_'
-        self.gt_prefix = 'gt_'
+        self.org_prefix = 'original'
+        self.gt_prefix = 'gt'
 
-        alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
+        alphanum_key = lambda key: [(int(re.split('_', key[len('original'):])[0][-1]), int(re.split('_', key[len('original'):])[1].split('.')[0]))]
         files = sorted(os.listdir(org_dir), key=alphanum_key)
         sizes = [Image.open(os.path.join(org_dir, f), 'r').size for f in files]
         int_masks = estimate_optical_flow(org_dir, 0.5)
@@ -26,7 +26,7 @@ class BasicDataset(Dataset):
 
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
 
-        self.ids = [splitext(file)[0].split('_')[1] for file in listdir(org_dir)
+        self.ids = [file[len('original'):] for file in listdir(org_dir)
                     if not file.startswith('.')]
         logging.info(f'Creating dataset with {len(self.ids)} examples')
 
@@ -74,8 +74,8 @@ class BasicDataset(Dataset):
 
     def __getitem__(self, i):
         idx = self.ids[i]
-        mask_file = glob(self.masks_dir + self.gt_prefix + idx + self.mask_suffix + '.*')
-        org_file = glob(self.org_dir + self.org_prefix + idx + '.*')
+        mask_file = glob(self.masks_dir + self.gt_prefix + idx + self.mask_suffix )
+        org_file = glob(self.org_dir + self.org_prefix + idx)
 
         assert len(mask_file) == 1, \
             f'Either no mask or multiple masks found for the ID {idx}: {mask_file}'
@@ -84,7 +84,7 @@ class BasicDataset(Dataset):
 
         mask = Image.open(mask_file[0]).resize(self.size).convert('L')
         org_img = Image.open(org_file[0]).resize(self.size)
-        int_mask = self.int_masks[int(idx) - 1]
+        int_mask = self.int_masks[idx]
         img = self.preprocess_input_with_int_mask(int_mask, org_img, self.scale)
         mask = self.preprocess(mask, self.scale)
 
