@@ -78,7 +78,7 @@ def get_args():
     parser.add_argument('--scale', '-s', type=float,
                         help="Scale factor for the input dataset",
                         default=1)
-    parser.add_argument('-g', '--gpu', type=str, default='0',
+    parser.add_argument('-g', '--gpu', type=str, default='1',
                         help='Set the gpu for cuda')
 
     return parser.parse_args()

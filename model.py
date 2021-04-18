@@ -11,9 +11,10 @@ class FlowUNetwork(nn.Module):
         self.bilinear = bilinear
 
     def forward(self, x):
-        residual = self.unet(x)
+        output = self.unet(x)
+        output = torch.clamp(output, 0, 1)
         #residual = torch.sigmoid(residual) * 2 - 1
         # split the 4 channel image input to retrieve the intermediate mask
         #int_mask = torch.split(x.permute(1, 0, 2, 3), [self.n_classes, self.n_channels-1])[0]
         #output = residual + int_mask
-        return residual
+        return output

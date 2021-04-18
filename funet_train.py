@@ -50,12 +50,12 @@ def train_net(net,
         Images scaling:  {img_scale}
     ''')
 
-    optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
+    optimizer = optim.Adam(net.parameters(), lr=lr)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
     if net.n_classes > 1:
         criterion = nn.CrossEntropyLoss()
     else:
-        criterion = nn.BCEWithLogitsLoss()
+        criterion = nn.L1Loss()
 
     for epoch in range(epochs):
         net.train()
@@ -83,7 +83,7 @@ def train_net(net,
 
 
                 loss.backward()
-                nn.utils.clip_grad_value_(net.parameters(), 0.1)
+                #nn.utils.clip_grad_value_(net.parameters(), 0.1)
                 optimizer.step()
 
                 pbar.update(imgs.shape[0])
@@ -137,7 +137,7 @@ def get_args():
                         help='Downscaling factor of the dataset')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=20.0,
                         help='Percent of the data that is used as validation (0-100)')
-    parser.add_argument('-g', '--gpu', type=str, default='0',
+    parser.add_argument('-g', '--gpu', type=str, default='1',
                         help='Set the gpu for cuda')
 
     return parser.parse_args()
