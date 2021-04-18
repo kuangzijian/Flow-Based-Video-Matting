@@ -109,9 +109,8 @@ if __name__ == "__main__":
 
     logging.info("Model loaded !")
     print("Model loaded !")
-    alphanum_key = lambda key: [int(re.split('_', key)[1].split('.')[0])]
-    img_files = sorted(os.listdir(org_img_path), key=alphanum_key)
     alphanum_key = lambda key: [(int(re.split('_', key)[0][-1]), int(re.split('_', key)[1].split('.')[0]))]
+    img_files = sorted(os.listdir(org_img_path), key=alphanum_key)
     true_masks = sorted(os.listdir(gt_mask_path), key=alphanum_key)
     i = 0
     pwcNetwork = PWCNet().cuda().eval()
