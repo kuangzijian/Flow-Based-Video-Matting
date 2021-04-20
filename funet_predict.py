@@ -58,14 +58,14 @@ def predict_img(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input dataset',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--model', '-m', default='checkpoints/CP_epoch6.pth',
+    parser.add_argument('--model', '-m', default='checkpoints/CP_epoch7.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--img', '-img', default='dataset/test2/', metavar='INPUT', nargs='+',
+    parser.add_argument('--img', '-img', default='dataset/original_testing/', metavar='INPUT', nargs='+',
                         help='path of original image dataset')
-    parser.add_argument('--mask', '-mask', default='dataset/ground_truth_testing2/', metavar='INPUT', nargs='+',
+    parser.add_argument('--mask', '-mask', default='dataset/ground_truth_testing/', metavar='INPUT', nargs='+',
                         help='path of ground truth mask dataset')
-    parser.add_argument('--output', '-o', default='dataset/mask_output3/', metavar='INPUT', nargs='+',
+    parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
                         help="No visualize the dataset as they are processed",
@@ -74,7 +74,7 @@ def get_args():
                         help="Do not save the output masks",
                         default=False)
     parser.add_argument('--no-eval', '-e', action='store_true',
-                        help="Do not evaluate.",
+                        help="Do not run evaluation.",
                         default=False)
     parser.add_argument('--mask-threshold', '-t', type=float,
                         help="Minimum probability value to consider a mask pixel white",

@@ -15,8 +15,8 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 
-dir_mask = 'dataset/train_dataset/ground_truth/'
-dir_org = 'dataset/train_dataset/train/'
+dir_mask = 'dataset/ground_truth_training/'
+dir_org = 'dataset/original_training/'
 dir_checkpoint = 'checkpoints/'
 
 
@@ -123,9 +123,9 @@ def train_net(net,
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Train the UNet on dataset and target masks',
+    parser = argparse.ArgumentParser(description='Train the FUNet on dataset and target masks',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=6,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=10,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=1,
                         help='Batch size', dest='batchsize')

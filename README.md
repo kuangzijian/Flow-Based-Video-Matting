@@ -49,17 +49,18 @@ python funet_train.py
 
 optional arguments:
   -h, --help            show this help message and exit
-  -e E, --epochs E      Number of epochs (default: 6)
+  -e E, --epochs E      Number of epochs (default: 10)
   -b [B], --batch-size [B]
                         Batch size (default: 1)
   -l [LR], --learning-rate [LR]
-                        Learning rate (default: 0.1)
+                        Learning rate (default: 0.0001)
   -f LOAD, --load LOAD  Load model from a .pth file (default: False)
   -s SCALE, --scale SCALE
-                        Downscaling factor of the images (default: 1)
+                        Downscaling factor of the dataset (default: 1)
   -v VAL, --validation VAL
                         Percent of the data that is used as validation (0-100)
                         (default: 20.0)
+  -g GPU, --gpu GPU     Set the gpu for cuda (default: 0)
 ``` 
 To predict using our model:
  1. Dump the testing data into the _original_testing_ folder, and dump the ground truth data into the _ground_truth_testing_ folder.
@@ -72,19 +73,25 @@ optional arguments:
   -h, --help            show this help message and exit
   --model FILE, -m FILE
                         Specify the file in which the model is stored
-                        (default: MODEL.pth)
-  --input INPUT [INPUT ...], -i INPUT [INPUT ...]
-                        filenames of input images (default: None)
+                        (default: checkpoints/CP_epoch7.pth)
+  --img INPUT [INPUT ...], -img INPUT [INPUT ...]
+                        path of original image dataset (default:
+                        dataset/original_testing/)
+  --mask INPUT [INPUT ...], -mask INPUT [INPUT ...]
+                        path of ground truth mask dataset (default:
+                        dataset/ground_truth_testing/)
   --output INPUT [INPUT ...], -o INPUT [INPUT ...]
-                        Filenames of ouput images (default: None)
-  --viz, -v             Visualize the images as they are processed (default:
-                        False)
+                        path of ouput dataset (default: dataset/mask_output/)
+  --no-viz, -v          No visualize the dataset as they are processed
+                        (default: False)
   --no-save, -n         Do not save the output masks (default: False)
+  --no-eval, -e         Do not run evaluation. (default: False)
   --mask-threshold MASK_THRESHOLD, -t MASK_THRESHOLD
                         Minimum probability value to consider a mask pixel
                         white (default: 0.5)
   --scale SCALE, -s SCALE
-                        Scale factor for the input images (default: 1)
+                        Scale factor for the input dataset (default: 1)
+  -g GPU, --gpu GPU     Set the gpu for cuda (default: 0)
 ``` 
 
 ## Credits
