@@ -1,9 +1,10 @@
-# Flow-based-Video-Matting-Algorithm
+# Flow-based-Video-Segmentation-Algorithm
 
-This is the repository to the paper "Flow based video matting" by Zijian Kuang and Xinran Tie.
-We proposed to use optical flow and UNet to generate a refined mask for video matting purpose.
+We proposed a novel flow-based encoder-decoder network to detect a human head and shoulders from a video and remove the background to create elegant media for videoconferencing and virtual reality applications.
 
-<a href="https://arxiv.org/abs/1709.02371" rel="Paper"><img src="https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/network.png" alt="Paper" width="100%"></a>
+This is the repository to the paper "Flow-based Video Segmentation for Human Head and Shoulders" by Zijian Kuang and Xinran Tie.
+
+<a href="https://arxiv.org/abs/1709.02371" rel="Paper"><img src="https://github.com/kuangzijian/Flow-Based-Video-Segmentation/blob/master/readme_imgs/network.png" alt="Paper" width="100%"></a>
 
 ## Getting Started
 
@@ -27,20 +28,20 @@ $ pip install -r requirements.txt
 
 ## Dataset
 
-We created our own video matting dataset. The dataset includes four online conference style green screen videos. We extracted the data from video and generated ground truth mask for each character, and then we applied virtual background to the frames as our training/testing dataset. You can download the dataset from <a href="https://drive.google.com/file/d/1HGUDS7oaYbBAJHfsQJBhc-r-9kRhh2cs/view?usp=sharing" rel="dataset"> this link <a/>. The data examples are shown as below:
+We created our own video segmentation dataset. The dataset includes four online conference style green screen videos. We extracted the data from video and generated ground truth mask for each character, and then we applied virtual background to the frames as our training/testing dataset. You can download the dataset from <a href="https://drive.google.com/file/d/1oDPHm-mG6lBMh9VvuM_uyYNUZ_33pLoL/view?usp=sharing" rel="dataset"> this link <a/>. The data examples are shown as below:
 
- Input image 1:![1](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/with_bg.jpg) | Input image 2: ![2](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/with_bg2.jpg)
+ Input image 1:![1](https://github.com/kuangzijian/Flow-Based-Video-Segmentation/blob/master/readme_imgs/with_bg.jpg) | Input image 2: ![2](https://github.com/kuangzijian/Flow-Based-Video-Segmentation/blob/master/readme_imgs/with_bg2.jpg)
 :-------------------------:|:-------------------------:
-Ground truth 1:![3](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/ground_truth.jpg) | Ground truth 2:![4](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/ground_truth2.jpg)
+Ground truth 1:![3](https://github.com/kuangzijian/Flow-Based-Video-Segmentation/blob/master/readme_imgs/ground_truth.jpg) | Ground truth 2:![4](https://github.com/kuangzijian/Flow-Based-Video-Segmentation/blob/master/readme_imgs/ground_truth2.jpg)
 
-To use our code to generate more video matting data and groudtruth, you can use the functions in _dataset_generator.py_
+To use our code to generate more video segmentation data and groudtruth, you can use the functions in _dataset_generator.py_
 
 
 ## Configure and Run the Code
 To train our model: 
  1. Create folder structure like the example shows in the picture below, and then dump the training data into the _original_training_ folder, and dump the ground truth data into the _ground_truth_training_ folder:
  
-  ![1](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/dataset_structure.png)
+  ![1](https://github.com/kuangzijian/Flow-Based-Video-Segmentation/blob/master/readme_imgs/dataset_structure.png)
   
  2. Run the training code:
 
