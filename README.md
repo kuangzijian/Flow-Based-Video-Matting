@@ -76,10 +76,10 @@ optional arguments:
                         Specify the file in which the model is stored
                         (default: checkpoints/CP_epoch7.pth)
   --img INPUT [INPUT ...], -img INPUT [INPUT ...]
-                        path of original image dataset (default:
+                        Path of original image dataset (default:
                         dataset/original_testing/)
   --mask INPUT [INPUT ...], -mask INPUT [INPUT ...]
-                        path of ground truth mask dataset (default:
+                        Path of ground truth mask dataset (default:
                         dataset/ground_truth_testing/)
   --output INPUT [INPUT ...], -o INPUT [INPUT ...]
                         path of ouput dataset (default: dataset/mask_output/)

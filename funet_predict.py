@@ -62,9 +62,9 @@ def get_args():
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
     parser.add_argument('--img', '-img', default='dataset/original_testing/', metavar='INPUT', nargs='+',
-                        help='path of original image dataset')
+                        help='Path of original image dataset')
     parser.add_argument('--mask', '-mask', default='dataset/ground_truth_testing/', metavar='INPUT', nargs='+',
-                        help='path of ground truth mask dataset')
+                        help='Path of ground truth mask dataset')
     parser.add_argument('--output', '-o', default='dataset/mask_output/', metavar='INPUT', nargs='+',
                         help='path of ouput dataset')
     parser.add_argument('--no-viz', '-v', action='store_true',
