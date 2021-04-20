@@ -27,7 +27,7 @@ $ pip install -r requirements.txt
 
 ## Dataset
 
-We created our own video matting dataset. The dataset includes four online conference style green screen videos. We extracted the data from video and generated ground truth mask for each character, and then we applied virtual background to the frames as our training/testing dataset. You can download the dataset from <a href="https://drive.google.com/file/d/1HGUDS7oaYbBAJHfsQJBhc-r-9kRhh2cs/view?usp=sharing" rel="dataset"> this link <a/>. The data examples are shown as below:
+We created our own video matting dataset. The dataset includes four online conference style green screen videos. We extracted the data from video and generated ground truth mask for each character, and then we applied virtual background to the frames as our training/testing dataset. You can download the dataset from <a href="https://drive.google.com/file/d/1oDPHm-mG6lBMh9VvuM_uyYNUZ_33pLoL/view?usp=sharing" rel="dataset"> this link <a/>. The data examples are shown as below:
 
  Input image 1:![1](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/with_bg.jpg) | Input image 2: ![2](https://github.com/kuangzijian/Flow-Based-Video-Matting/blob/master/readme_imgs/with_bg2.jpg)
 :-------------------------:|:-------------------------:
