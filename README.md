@@ -2,7 +2,7 @@
 
 We proposed a novel flow-based encoder-decoder network to detect a human head and shoulders from a video and remove the background to create elegant media for videoconferencing and virtual reality applications.
 
-This is the repository to the paper "Flow-based Video Segmentation for Human Head and Shoulders" by Zijian Kuang and Xinran Tie.
+This is the repository to the paper [Flow-based Video Segmentation for Human Head and Shoulders](https://arxiv.org/abs/2104.09752) by Zijian Kuang and Xinran Tie.
 
 <a href="https://arxiv.org/abs/1709.02371" rel="Paper"><img src="https://github.com/kuangzijian/Flow-Based-Video-Segmentation/blob/master/readme_imgs/network.png" alt="Paper" width="100%"></a>
 
